@@ -14,6 +14,7 @@ class TradeListView(generics.ListAPIView):
 
 class TradeCreateView(generics.CreateAPIView):
     queryset = Trade
+
     serializer_class = CreateTradeSerializer
 
     def create(self, request, *args, **kwargs):
@@ -28,6 +29,7 @@ class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method == 'GET':
             return CreateTradeSerializer
         return super().get_serializer_class()
+
 
 class TradeJoinView(generics.UpdateAPIView):
     queryset = Trade
