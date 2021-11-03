@@ -1,14 +1,15 @@
-from rest_framework import generics, serializers
+from rest_framework import generics
 from django_filters import rest_framework as filters
 from .models import Trade
-from .serializers import TradeSerializer, CreateTradeSerializer
+
+from .serializers import UpdateTradeSerializer, CreateTradeSerializer, TradeJoinSerializer
 
 
 class TradeListView(generics.ListAPIView):
     filter_backends = (filters.DjangoFilterBackend,)
     filter_fields = ['sell', 'buy', 'quantity']
     queryset = Trade.objects.filter(is_active=True)
-    serializer_class = TradeSerializer
+    serializer_class = CreateTradeSerializer
 
 
 class TradeCreateView(generics.CreateAPIView):
@@ -19,6 +20,19 @@ class TradeCreateView(generics.CreateAPIView):
         return super().create(request, *args, **kwargs)
 
 
-class TradeUpdate(generics.RetrieveUpdateDestroyAPIView):
+class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Trade
-    serializer_class = TradeSerializer
+
+    def get_serializer_class(self):
+        method = self.request.method
+        if method == 'GET':
+            return CreateTradeSerializer
+        elif method == 'PUT':
+            return UpdateTradeSerializer
+        elif method == 'DELETE':
+            return CreateTradeSerializer
+
+
+class TradeJoinView(generics.UpdateAPIView):
+    queryset = Trade
+    serializer_class = TradeJoinSerializer
