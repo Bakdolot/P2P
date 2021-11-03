@@ -1,5 +1,7 @@
 from rest_framework import generics
 from django_filters import rest_framework as filters
+
+from .filters import TradeListFilter
 from .models import Trade
 
 from .serializers import UpdateTradeSerializer, CreateTradeSerializer, TradeJoinSerializer
@@ -7,7 +9,7 @@ from .serializers import UpdateTradeSerializer, CreateTradeSerializer, TradeJoin
 
 class TradeListView(generics.ListAPIView):
     filter_backends = (filters.DjangoFilterBackend,)
-    filter_fields = ['sell', 'buy', 'quantity']
+    filterset_class = TradeListFilter
     queryset = Trade.objects.filter(is_active=True)
     serializer_class = CreateTradeSerializer
 
