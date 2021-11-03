@@ -1,7 +1,7 @@
 from rest_framework import generics, serializers
 from django_filters import rest_framework as filters
 from .models import Trade
-from .serializers import TradeSerializer
+from .serializers import TradeSerializer, CreateTradeSerializer
 
 
 class TradeListView(generics.ListAPIView):
@@ -13,7 +13,7 @@ class TradeListView(generics.ListAPIView):
 
 class TradeCreateView(generics.CreateAPIView):
     queryset = Trade
-    serializer_class = TradeSerializer
+    serializer_class = CreateTradeSerializer
 
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
