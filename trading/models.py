@@ -2,11 +2,6 @@ from django.db import models
 
 
 class Trade(models.Model):
-    TYPE_CHOICES = (
-        (1, 'Крипта'),
-        (2, 'Карта'),
-        (3, 'Наличка')
-    )
 
     owner = models.CharField('login', max_length=150)
     is_active = models.BooleanField('Активность', default=True)
@@ -17,7 +12,7 @@ class Trade(models.Model):
     create_at = models.DateTimeField('Дата создания', auto_now_add=True)
     updated_at = models.DateTimeField('Изменено', auto_now=True)
     participant = models.CharField('Email покупателя', blank=True, max_length=150)
-    type = models.CharField('Тип сделки', choices=TYPE_CHOICES, max_length=30)
+    type = models.CharField('Тип сделки', max_length=30)
 
     class Meta:
         db_table = 'et_trade'

@@ -1,7 +1,7 @@
 import requests
 
 from decimal import Decimal
-from models import EtBalance, EtAuthTokens
+from .models import EtBalance, EtAuthTokens
 
 
 def checking_and_debiting_balance(token: str, quantity: Decimal, currency: int) -> bool:
