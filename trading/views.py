@@ -5,7 +5,7 @@ from django_filters import rest_framework as filters
 
 from .filters import TradeListFilter
 from .models import Trade
-from .trade_services import checking_and_debiting_balance
+from .trade_services import checking_and_debiting_balance, get_login
 from .serializers import UpdateTradeSerializer, CreateTradeSerializer, TradeJoinSerializer
 
 
@@ -23,9 +23,11 @@ class TradeCreateView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         token = request.META.get('HTTP_AUTHORIZATION').split(' ')[1]
-        print(token)
+        login = get_login(token)
         data = request.POST
-        if checking_and_debiting_balance(token, data['sell_quantity'], data['buy_quantity']):
+
+        if checking_and_debiting_balance(login, data['sell_quantity'], data['buy_quantity']):
+            request.POST['owner'] = login
             trade = super().create(request, *args, **kwargs)
             return Response(trade, status=status.HTTP_201_CREATED)
         return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
