@@ -1,9 +1,11 @@
 from rest_framework import generics
+from rest_framework.response import Response
+from rest_framework import status
 from django_filters import rest_framework as filters
 
 from .filters import TradeListFilter
 from .models import Trade
-
+from .trade_services import checking_and_debiting_balance
 from .serializers import UpdateTradeSerializer, CreateTradeSerializer, TradeJoinSerializer
 
 
@@ -20,7 +22,11 @@ class TradeCreateView(generics.CreateAPIView):
     serializer_class = CreateTradeSerializer
 
     def create(self, request, *args, **kwargs):
-        return super().create(request, *args, **kwargs)
+        data = request.POST()
+        if checking_and_debiting_balance(data['token'], data['quantity'], data['currency']):
+            trade = super().create(request, *args, **kwargs)
+            return Response(trade, status=status.HTTP_201_CREATED)
+        return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
 
 
 class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
