@@ -22,8 +22,10 @@ class TradeCreateView(generics.CreateAPIView):
     serializer_class = CreateTradeSerializer
 
     def create(self, request, *args, **kwargs):
-        data = request.POST()
-        if checking_and_debiting_balance(data['token'], data['quantity'], data['currency']):
+        token = request.META.get('HTTP_AUTHORIZATION').split(' ')[1]
+        print(token)
+        data = request.POST
+        if checking_and_debiting_balance(token, data['sell_quantity'], data['buy_quantity']):
             trade = super().create(request, *args, **kwargs)
             return Response(trade, status=status.HTTP_201_CREATED)
         return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)

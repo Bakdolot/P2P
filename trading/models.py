@@ -5,8 +5,8 @@ class Trade(models.Model):
 
     owner = models.CharField('login', max_length=150)
     is_active = models.BooleanField('Активность', default=True)
-    sell = models.IntegerField('ID продаваемой крипты', blank=True)
-    buy = models.IntegerField('ID покупаемой крипты', blank=True)
+    sell_currency = models.IntegerField('ID продаваемой крипты', blank=True)
+    buy_currency = models.IntegerField('ID покупаемой крипты', blank=True)
     sell_quantity = models.DecimalField('Сумма продаваемой крипты', max_digits=19, decimal_places=10)
     buy_quantity = models.DecimalField('Сумма покупаемой крипты', max_digits=19, decimal_places=10)
     create_at = models.DateTimeField('Дата создания', auto_now_add=True)
