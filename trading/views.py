@@ -5,8 +5,8 @@ from django_filters import rest_framework as filters
 
 from .filters import TradeListFilter
 from .models import Trade, EtAuthTokens
-from .trade_services import checking_and_debiting_balance
-from .serializers import UpdateTradeSerializer, CreateTradeSerializer, TradeJoinSerializer
+from .trade_services import checking_and_debiting_balance, get_login
+from .serializers import UpdateTradeSerializer, CreateTradeSerializer
 
 
 class TradeListView(generics.ListAPIView):
@@ -22,8 +22,12 @@ class TradeCreateView(generics.CreateAPIView):
     serializer_class = CreateTradeSerializer
 
     def create(self, request, *args, **kwargs):
-        data = request.POST()
-        if checking_and_debiting_balance(data['token'], data['quantity'], data['currency']):
+        token = request.META.get('HTTP_AUTHORIZATION').split(' ')[1]
+        login = get_login(token)
+        data = request.POST
+
+        if checking_and_debiting_balance(login, data['sell_quantity'], data['buy_quantity']):
+            request.POST['owner'] = login
             trade = super().create(request, *args, **kwargs)
             return Response(trade, status=status.HTTP_201_CREATED)
         return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)

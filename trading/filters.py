@@ -8,4 +8,4 @@ class TradeListFilter(FilterSet):
 
     class Meta:
         model = Trade
-        fields = ['sell', 'buy', 'quantity', 'type']
+        fields = ['sell_currency', 'buy_currency', 'quantity', 'type']
