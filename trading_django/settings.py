@@ -63,12 +63,12 @@ WSGI_APPLICATION = 'trading_django.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('POSTGRES_USER'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT')
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'netex_database',
+        'USER': 'netex_user',
+        'PASSWORD': '4mttBj36JMHwLyTG',
+        'HOST': '78.141.219.141',
+        'PORT': '3306'
     }
 }
 
