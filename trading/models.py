@@ -19,6 +19,9 @@ class Trade(models.Model):
     participant = models.CharField('Токен покупателя', blank=True, max_length=150)
     type = models.CharField('Тип сделки', choices=TYPE_CHOICES, max_length=30)
 
+    class Meta:
+        db_table = 'et_trade'
+
 
 class EtActivations(models.Model):
     guid = models.CharField(max_length=120)
