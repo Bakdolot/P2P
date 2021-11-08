@@ -4,12 +4,13 @@ from decimal import Decimal
 from .models import EtBalance, EtAuthTokens
 
 
-def checking_and_debiting_balance(token: str, quantity: Decimal, currency: int) -> bool:
+def checking_and_debiting_balance(quantity: Decimal, currency: int, token: str = None, login = None) -> bool:
     """ Проверка баланса, если на балансе достаточно средств - они
         списываются со счета, в противном случае сделка не может быть создана
     """
     try:
-        login = EtAuthTokens.objects.get(token=token)
+        if not login:
+            login = EtAuthTokens.objects.get(token=token)
         balance = EtBalance.objects.get(login=login.login, currency=currency)
 
         if Decimal(balance.balance) < quantity:

@@ -4,7 +4,7 @@ from rest_framework import status
 from django_filters import rest_framework as filters
 
 from .filters import TradeListFilter
-from .models import Trade
+from .models import Trade, EtAuthTokens
 from .trade_services import checking_and_debiting_balance
 from .serializers import UpdateTradeSerializer, CreateTradeSerializer, TradeJoinSerializer
 
@@ -41,4 +41,14 @@ class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
 
 class TradeJoinView(generics.UpdateAPIView):
     queryset = Trade
-    serializer_class = TradeJoinSerializer
+
+    def update(self, request, *args, **kwargs):
+        data = request.POST
+        trade = generics.get_object_or_404(Trade.objects.filter(is_active=True), id=kwargs.get('pk'))
+        token = request.META.get('HTTP_AUTHORIZATION').split(' ')[1]
+        email = generics.get_object_or_404(EtAuthTokens, token=token)
+        if checking_and_debiting_balance(data['buy_quantity'], data['buy'], email):
+            trade.participant = email
+            trade.save()
+            return Response(status=status.HTTP_200_OK)
+        return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
