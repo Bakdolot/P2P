@@ -2,12 +2,14 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 from django_filters import rest_framework as filters
+from django.http import QueryDict
 
 from .filters import TradeListFilter
 from .models import Trade, EtAuthTokens
 from .trade_services import checking_and_debiting_balance, get_login
 from .serializers import UpdateTradeSerializer, CreateTradeSerializer
 
+import json
 
 class TradeListView(generics.ListAPIView):
     filter_backends = (filters.DjangoFilterBackend,)
@@ -38,13 +40,24 @@ class TradeCreateView(generics.CreateAPIView):
 
 
 class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Trade
+    queryset = Trade.objects.all()
     serializer_class = UpdateTradeSerializer
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
             return CreateTradeSerializer
         return super().get_serializer_class()
+
+    def put(self, request, *args, **kwargs):
+        try:
+            login = get_login(request.META.get('HTTP_AUTHORIZATION').split(' ')[1])
+            if request.data['owner'] == login:
+
+                return super().update(request, *args, **kwargs)
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        except Exception as e:
+
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class TradeJoinView(generics.UpdateAPIView):
