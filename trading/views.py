@@ -4,22 +4,38 @@ from rest_framework import status
 from django_filters import rest_framework as filters
 
 from .filters import TradeListFilter
-from .models import Trade, EtAuthTokens
+from .models import TradeCash, EtAuthTokens, TradeCript
 from .trade_services import checking_and_debiting_balance, get_login, make_transaction
-from .serializers import UpdateTradeSerializer, CreateTradeSerializer, TradeJoinSerializer
+from .serializers import UpdateTradeSerializer, CreateTradeCriptSerializer, TradeJoinSerializer, CreateTradeCashSerializer
 
 
 class TradeListView(generics.ListAPIView):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = TradeListFilter
-    queryset = Trade.objects.filter(is_active=True)
-    serializer_class = CreateTradeSerializer
+    queryset = TradeCript.objects.filter(is_active=True)
+    serializer_class = CreateTradeCriptSerializer
 
 
 class TradeCreateView(generics.CreateAPIView):
-    queryset = Trade
+    queryset = TradeCript
 
-    serializer_class = CreateTradeSerializer
+    serializer_class = CreateTradeCriptSerializer
+
+    def get_queryset(self):
+        types = self.request.POST.get('type')
+        print(types)
+        if types == 'cript':
+            return super().get_queryset()
+        elif types == 'cash':
+            return TradeCash
+    
+    def get_serializer_class(self):
+        types = self.request.POST.get('type')
+        print(types)
+        if types == 'cript':
+            return super().get_serializer_class()
+        elif types == 'cash':
+            return CreateTradeCashSerializer
 
     def create(self, request, *args, **kwargs):
         token = request.META.get('HTTP_AUTHORIZATION').split(' ')[1]
@@ -27,7 +43,6 @@ class TradeCreateView(generics.CreateAPIView):
         data = request.POST.copy()
         if checking_and_debiting_balance(login, data['sell_quantity'], data['sell_currency']):
             data['owner'] = login
-
             serializer = self.get_serializer(data=data)
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
@@ -38,12 +53,12 @@ class TradeCreateView(generics.CreateAPIView):
 
 
 class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Trade.objects.all()
+    queryset = TradeCript
     serializer_class = UpdateTradeSerializer
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
-            return CreateTradeSerializer
+            return CreateTradeCriptSerializer
         return super().get_serializer_class()
 
     def put(self, request, *args, **kwargs):
@@ -60,16 +75,19 @@ class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
 
 class TradeJoinView(generics.UpdateAPIView):
     serializer_class = TradeJoinSerializer
-    queryset = Trade
+    queryset = TradeCript
 
     def put(self, request, pk, *args, **kwargs):
         try:
-            trade = generics.get_object_or_404(Trade, id=pk)
+            trade = generics.get_object_or_404(TradeCript, id=pk)
             login = get_login(request.META.get('HTTP_AUTHORIZATION').split(' ')[1])
             if checking_and_debiting_balance(login, trade.buy_quantity, trade.buy_currency):
-                make_transaction(trade)
+                trade.participant = login
+                trade.save()
+
+                if make_transaction(trade):
+                    return Response({'status': 'SUCCESS'}, status=status.HTTP_202_ACCEPTED)
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
         return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)

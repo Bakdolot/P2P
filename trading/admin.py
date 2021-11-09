@@ -1,16 +1,23 @@
 from django.contrib import admin
-from .models import Trade, EtBalance, EtAuthTokens
+from .models import TradeCript, TradeCash, EtBalance, EtAuthTokens
 
 
 # Register your models here.
 
-
-@admin.register(Trade)
-class TradeAdmin(admin.ModelAdmin):
+@admin.register(TradeCript)
+class TradeCriptAdmin(admin.ModelAdmin):
     list_display = ('id', 'owner', 'is_active', 'sell_currency', 'buy_currency', 'sell_quantity',
-                    'buy_quantity', 'create_at', 'updated_at', 'participant', 'type')
+                    'buy_quantity', 'create_at', 'updated_at', 'participant')
     list_display_links = list_display
-    list_filter = ['is_active', 'type', 'create_at']
+    list_filter = ['is_active', 'create_at']
+
+
+@admin.register(TradeCash)
+class TradeCashAdmin(admin.ModelAdmin):
+    list_display = ('id', 'owner', 'is_active', 'sell_currency', 'buy_currency', 'sell_quantity',
+                    'buy_quantity', 'create_at', 'updated_at', 'participant')
+    list_display_links = list_display
+    list_filter = ['is_active', 'create_at']
 
 
 @admin.register(EtBalance)
