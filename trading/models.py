@@ -1,9 +1,8 @@
 from django.db import models
 
 
-class Trade(models.Model):
-
-    owner = models.CharField('login', max_length=150)
+class TradeCript(models.Model):
+    owner = models.CharField('Email продавца', max_length=150)
     is_active = models.BooleanField('Активность', default=True)
     sell_currency = models.IntegerField('ID продаваемой крипты', blank=True)
     buy_currency = models.IntegerField('ID покупаемой крипты', blank=True)
@@ -12,11 +11,29 @@ class Trade(models.Model):
     create_at = models.DateTimeField('Дата создания', auto_now_add=True)
     updated_at = models.DateTimeField('Изменено', auto_now=True)
     participant = models.CharField('Email покупателя', blank=True, max_length=150)
-    type = models.CharField('Тип сделки', max_length=30)
     status = models.BooleanField('Статус сделки', default=False)
 
     class Meta:
-        db_table = 'et_trade'
+        db_table = 'et_trade_cript'
+
+
+class TradeCash(models.Model):
+    owner = models.CharField('login', max_length=150)
+    is_active = models.BooleanField('Активность', default=True)
+    sell_currency = models.IntegerField('ID валюты (фиат)', blank=True)
+    buy_currency = models.IntegerField('ID покупаемой крипты', blank=True)
+    buy_quantity = models.DecimalField('Сумма валюты (фиат)', max_digits=19, decimal_places=10)
+    sell_quantity = models.DecimalField('Сумма продаваемой крипты', max_digits=19, decimal_places=10)
+    description = models.TextField('Описание')
+    create_at = models.DateTimeField('Дата создания', auto_now_add=True)
+    updated_at = models.DateTimeField('Изменено', auto_now=True)
+    participant = models.CharField('Email покупателя', blank=True, max_length=150)
+    status = models.BooleanField('Статус сделки', default=False)
+    longitude = models.DecimalField('Долгота', max_digits=9, decimal_places=6)
+    latitude = models.DecimalField('Широта', max_digits=9, decimal_places=6)
+
+    class Meta:
+        db_table = 'et_trade_cash'
 
 
 class EtActivations(models.Model):
