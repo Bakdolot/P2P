@@ -13,7 +13,9 @@ class Trade(models.Model):
     updated_at = models.DateTimeField('Изменено', auto_now=True)
     participant = models.CharField('Email покупателя', blank=True, max_length=150)
     type = models.CharField('Тип сделки', max_length=30)
-    status = models.BooleanField('Статус сделки', default=False)
+    status = models.CharField('Статус сделки', max_length=30)
+    longitude = models.DecimalField('Долгота', max_digits=9, decimal_places=6)
+    latitude = models.DecimalField('Широта', max_digits=9, decimal_places=6)
 
     class Meta:
         db_table = 'et_trade'

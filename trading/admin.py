@@ -15,7 +15,7 @@ class TradeAdmin(admin.ModelAdmin):
 
 @admin.register(EtBalance)
 class EtBalance(admin.ModelAdmin):
-    list_display = ('login', 'balance', 'currency')
+    list_display = ('id', 'login', 'balance', 'currency')
     list_display_filter = ['currency']
 
 
