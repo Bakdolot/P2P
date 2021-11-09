@@ -9,6 +9,20 @@ class CreateTradeCriptSerializer(serializers.ModelSerializer):
         exclude = ['create_at', 'participant', 'updated_at', 'status', 'is_active']
 
 
+class RetrieveTradeCriptSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = TradeCript
+        fields = '__all__'
+
+
+class RetrieveTradeCashSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = TradeCash
+        fields = '__all__'
+
+
 class CreateTradeCashSerializer(serializers.ModelSerializer):
     
     class Meta:
@@ -16,18 +30,18 @@ class CreateTradeCashSerializer(serializers.ModelSerializer):
         exclude = ['create_at', 'participant', 'updated_at', 'status', 'is_active']
 
 
-class UpdateTradeSerializer(serializers.ModelSerializer):
+class UpdateTradeCriptSerializer(serializers.ModelSerializer):
 
     class Meta:
 
         model = TradeCript
-        fields = ['owner', 'is_active', 'sell_currency', 'buy_currency',
-                  'sell_currency', 'buy_currency', 'sell_quantity',
-                  'buy_quantity', ]
+        exclude = ['owner', 'create_at', 'participant', 'updated_at', 'status']
 
 
-class TradeJoinSerializer(serializers.ModelSerializer):
+class UpdateTradeCashSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = TradeCript
-        fields = ['participant']
+
+        model = TradeCash
+        exclude = ['owner', 'create_at', 'participant', 'updated_at', 'status']
+
