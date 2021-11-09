@@ -5,7 +5,7 @@ from django_filters import rest_framework as filters
 
 from .filters import TradeListFilter
 from .models import Trade, EtAuthTokens
-from .trade_services import checking_and_debiting_balance, get_login
+from .trade_services import checking_and_debiting_balance, get_login, make_transaction
 from .serializers import UpdateTradeSerializer, CreateTradeSerializer, TradeJoinSerializer
 
 
@@ -49,15 +49,21 @@ class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
 
 class TradeJoinView(generics.UpdateAPIView):
     serializer_class = TradeJoinSerializer
+    queryset = Trade
 
-    def update(self, request, *args, **kwargs):
-        data = request.POST
+    def update(self, request, pk, *args, **kwargs):
+        trade = generics.get_object_or_404(Trade, id=pk)
         token = request.META.get('HTTP_AUTHORIZATION').split(' ')[1]
         login = get_login(token)
-        if checking_and_debiting_balance(data['buy_quantity'], data['buy'], login):
-            mutable = request.POST._mutable
-            request.POST._mutable = True
-            request.POST['participant'] = login
-            request.POST._mutable = mutable
-            return super().update(request, *args, **kwargs)
+        if checking_and_debiting_balance(login, trade.buy_quantity, trade.buy_currency):
+            data = request.data.copy()
+            data['participant'] = login
+            partial = kwargs.pop('partial', False)
+            instance = self.get_object()
+            serializer = self.get_serializer(instance, data=data, partial=partial)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            if trade.type == '1':
+                make_transaction(trade)
+            return Response(serializer.data)
         return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
