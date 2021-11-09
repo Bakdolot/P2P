@@ -24,12 +24,16 @@ class TradeCreateView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         token = request.META.get('HTTP_AUTHORIZATION').split(' ')[1]
         login = get_login(token)
-        data = request.POST
+        data = request.POST.copy()
+        if checking_and_debiting_balance(login, data['sell_quantity'], data['sell_currency']):
+            data['owner'] = login
 
-        if checking_and_debiting_balance(login, data['sell_quantity'], data['buy_quantity']):
-            request.POST['owner'] = login
-            trade = super().create(request, *args, **kwargs)
-            return Response(trade, status=status.HTTP_201_CREATED)
+            serializer = self.get_serializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
         return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
 
 
@@ -48,11 +52,11 @@ class TradeJoinView(generics.UpdateAPIView):
 
     def update(self, request, *args, **kwargs):
         data = request.POST
-        trade = generics.get_object_or_404(Trade.objects.filter(is_active=True), id=kwargs.get('pk'))
+        trade = generics.get_object_or_404(Trade.objects.filter(is_active=True), id=data.get('pk'))
         token = request.META.get('HTTP_AUTHORIZATION').split(' ')[1]
-        email = generics.get_object_or_404(EtAuthTokens, token=token)
-        if checking_and_debiting_balance(data['buy_quantity'], data['buy'], email):
-            trade.participant = email
+        login = get_login(token)
+        if checking_and_debiting_balance(login, data['buy_quantity'], data['buy_currency']):
+            trade.participant = login
             trade.save()
             return Response(status=status.HTTP_200_OK)
         return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)

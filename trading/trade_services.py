@@ -1,7 +1,5 @@
-import requests
-
 from decimal import Decimal
-from .models import EtBalance, EtAuthTokens
+from .models import EtBalance, EtAuthTokens, EtCurrency
 
 
 def get_login(token: str) -> str:
@@ -9,32 +7,27 @@ def get_login(token: str) -> str:
     return user.login
 
 
-def checking_and_debiting_balance(quantity: Decimal, currency: int, token: str = None, login = None) -> bool:
+def checking_and_debiting_balance(login: str, quantity: Decimal, currency: int) -> bool:
     """ Проверка баланса, если на балансе достаточно средств - они
         списываются со счета, в противном случае сделка не может быть создана
     """
     try:
-        if not login:
-            login = EtAuthTokens.objects.get(token=token)
-        balance = EtBalance.objects.get(login=login.login, currency=currency)
-
-        if Decimal(balance.balance) < quantity:
-            balance.balance -= quantity
+        balance = EtBalance.objects.get(login=login, currency='DOGE')
+        if Decimal(balance.balance) >= Decimal(quantity):
+            balance.balance = str(Decimal(balance.balance) - Decimal(quantity))
             balance.save(update_fields=['balance'])
             return True
-        return False
+        else:
+            print('NO')
 
     except Exception as e:
+        print(e)
         return False
 
 
 def make_transaction(owner: str, participant: str, sell: int, buy: int, quantity: int) -> int:
-    url = 'some url'
-    response = requests.post(url, headers={'Authorization': 'Basic *******'},
-                             data={'owner': owner, 'quantity': quantity,
-                                   'sell': sell, 'participant': participant,
-                                   'buy': buy},)
-    return response.status_code
+
+    return None
 
 
 def send_notification(id: str):
