@@ -11,9 +11,8 @@ def checking_and_debiting_balance(login: str, quantity: Decimal, currency: int) 
     """ Проверка баланса, если на балансе достаточно средств - они
         списываются со счета, в противном случае сделка не может быть создана
     """
-    currency = EtCurrency.objects.get(id=currency)
-
     try:
+        currency = EtCurrency.objects.get(id=currency)
         balance = EtBalance.objects.get(login=login, currency=currency.alias)
         if Decimal(balance.balance) >= Decimal(quantity):
             balance.balance = str(Decimal(balance.balance) - Decimal(quantity))
