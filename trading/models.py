@@ -13,6 +13,7 @@ class Trade(models.Model):
     updated_at = models.DateTimeField('Изменено', auto_now=True)
     participant = models.CharField('Email покупателя', blank=True, max_length=150)
     type = models.CharField('Тип сделки', max_length=30)
+    status = models.BooleanField('Статус сделки', default=False)
 
     class Meta:
         db_table = 'et_trade'
