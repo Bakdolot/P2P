@@ -19,8 +19,8 @@ from .permissions import IsOwnerOrReadOnly, IsOwner
 class TradeListView(generics.ListAPIView):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = TradeListFilter
-    queryset = Trade.objects.filter(is_active=True, status='1', participant=None)
-    serializer_class = CreateTradeSerializer
+    queryset = Trade.objects.filter(is_active=True, status='1')
+    serializer_class = RetrieveTradeSerializer
 
 
 class TradeCreateView(generics.CreateAPIView):

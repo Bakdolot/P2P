@@ -1,11 +1,11 @@
+from django_filters.filters import RangeFilter
 from django_filters.rest_framework import FilterSet
-from django_filters import NumericRangeFilter
 from .models import Trade
 
 
 class TradeListFilter(FilterSet):
-    sell_quantity = NumericRangeFilter()
-    buy_quantity = NumericRangeFilter()
+    sell_quantity = RangeFilter()
+    buy_quantity = RangeFilter()
 
     class Meta:
         model = Trade
