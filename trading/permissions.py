@@ -8,7 +8,26 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         try:
-            login = get_login(request.META.get('HTTP_AUTHORIZATION').split(' ')[1])
+            login = request.user.login
             return obj.owner == login
         except Exception as e:
             return False
+
+
+class IsOwner(permissions.BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+        try:
+            login = request.user.login
+            return obj.owner == login
+        except Exception as e:
+            return False
+
+
+class CustomIsAuthOrReadOnly(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return bool(
+            request.method in permissions.SAFE_METHODS or
+            request.user
+        )
