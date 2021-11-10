@@ -73,7 +73,9 @@ class TradeJoinView(generics.GenericAPIView):
                         return Response({'status': 'SUCCESS'}, status=status.HTTP_202_ACCEPTED)
 
             elif trade.type == '3':
-                pass
+                trade.participant = login
+                trade.save()
+                return Response({'status': 'SUCCESS'}, status=status.HTTP_202_ACCEPTED)
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

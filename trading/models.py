@@ -23,6 +23,8 @@ class Trade(models.Model):
     phone = models.CharField('Телефонный номер', max_length=50, blank=True, null=True)
     longitude = models.DecimalField('Долгота', max_digits=9, decimal_places=6, blank=True, null=True)
     latitude = models.DecimalField('Широта', max_digits=9, decimal_places=6, blank=True, null=True)
+    bank_card = models.CharField(max_length=16, blank=True, null=True)
+    image = models.FileField(blank=True, null=True)
 
     class Meta:
         db_table = 'et_trade'
