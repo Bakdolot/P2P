@@ -22,3 +22,12 @@ class UpdateTradeSerializer(serializers.ModelSerializer):
 
         model = Trade
         exclude = ['owner', 'create_at', 'participant', 'updated_at', 'status']
+
+
+class AcceptCardPaymentTradeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Trade
+        fields = ['image']
+
+

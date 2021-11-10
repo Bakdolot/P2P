@@ -7,11 +7,12 @@ from django.db import transaction
 
 from .filters import TradeListFilter
 from .models import EtBalance, EtCurrency, EtUsers, Trade
-from .trade_services import checking_and_debiting_balance, make_transaction
+from .trade_services import checking_and_debiting_balance, make_transaction, send_notification
 from .serializers import (
     UpdateTradeSerializer, 
     CreateTradeSerializer, 
-    RetrieveTradeSerializer
+    RetrieveTradeSerializer,
+    AcceptCardPaymentTradeSerializer
     )
 from .permissions import IsOwnerOrReadOnly, IsOwner
 
@@ -31,19 +32,20 @@ class TradeCreateView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         login = request.user.login
         data = request.POST.copy()
-        if checking_and_debiting_balance(login, data['sell_quantity'], data['sell_currency']):
-            data['owner'] = login
-            serializer = self.get_serializer(data=data)
-            serializer.is_valid(raise_exception=True)
-            self.perform_create(serializer)
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        with transaction.atomic():
+            if checking_and_debiting_balance(login, data['sell_quantity'], data['sell_currency']):
+                data['owner'] = login
+                serializer = self.get_serializer(data=data)
+                serializer.is_valid(raise_exception=True)
+                self.perform_create(serializer)
+                headers = self.get_success_headers(serializer.data)
+                return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
         return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
 
 
 class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Trade
+    queryset = Trade.objects.filter(is_active=True)
     serializer_class = UpdateTradeSerializer
     permission_classes = [IsOwnerOrReadOnly]
 
@@ -51,6 +53,20 @@ class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method == 'GET':
             return RetrieveTradeSerializer
         return super().get_serializer_class()
+
+    def put(self, request, *args, **kwargs):
+        super().put(request, *args, **kwargs)
+        trade = self.get_object()
+        if trade.owner_confirm:
+            try:
+                if make_transaction(trade):
+                    return Response(
+                        {'status': 'Trade was completed successfully'},
+                        status=status.HTTP_202_ACCEPTED)
+            except Exception as e:
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(status=status.HTTP_202_ACCEPTED)
 
 
 class TradeJoinView(generics.GenericAPIView):
@@ -69,14 +85,16 @@ class TradeJoinView(generics.GenericAPIView):
             elif trade.type == '1':
                 if checking_and_debiting_balance(login, trade.buy_quantity, trade.buy_currency):
                     trade.participant = login
-                    trade.status = '2'
-                    trade.save()
-
                     if make_transaction(trade):
+                        trade.status = '2'
+                        trade.save()
                         return Response({'status': 'SUCCESS'}, status=status.HTTP_202_ACCEPTED)
 
             elif trade.type == '3':
-                pass
+                trade.participant = login
+                trade.status = '2'
+                trade.save()
+                return Response({'status': 'SUCCESS'}, status=status.HTTP_202_ACCEPTED)
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -89,7 +107,8 @@ class AcceptTradeView(generics.GenericAPIView):
     def put(self, request, pk, *args, **kwargs):
         try:
             with transaction.atomic():
-                trade = generics.get_object_or_404(Trade.objects.filter(is_active=True, status='2', type='2'), id=pk)
+                trade = generics.get_object_or_404(
+                    Trade.objects.filter(is_active=True, status='2', type='2'), id=pk)
                 sell_currency = EtCurrency.objects.get(id=trade.sell_currency)
                 user = EtBalance.objects.get(login=trade.participant, currency=sell_currency.alias)
                 user.balance = str(Decimal(user.balance) + Decimal(trade.sell_quantity))
@@ -97,5 +116,22 @@ class AcceptTradeView(generics.GenericAPIView):
                 trade.save()
                 user.save()
                 return Response({'status': 'SUCCESS'}, status=status.HTTP_202_ACCEPTED)
+
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AcceptCardPaymentTradeView(generics.RetrieveUpdateAPIView):
+    queryset = Trade.objects.filter(is_active=True, type=3)
+    serializer_class = AcceptCardPaymentTradeSerializer
+
+    def put(self, request, *args, **kwargs):
+        if super().put(request, *args, **kwargs):
+            trade = self.get_object()
+            trade.participant_sent = True
+            trade.save()
+            send_notification(trade.owner)
+            return Response({'participant': 'sent'}, status=status.HTTP_202_ACCEPTED)
+
+
+
