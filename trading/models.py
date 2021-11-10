@@ -2,12 +2,14 @@ from django.db import models
 
 
 class Trade(models.Model):
+    def upload_to(self) -> str:
+        return f'participant_images/{self.participant}/'
+
     TYPE_CHOICES = (
         ('1', 'Trade With cript'),
         ('2', 'Trade with cash'),
         ('3', 'Trade with card')
     )
-
     STATUS_CHOICES = (
         ('1', 'in anticipation'),
         ('2', 'in processing'),
@@ -30,7 +32,9 @@ class Trade(models.Model):
     longitude = models.DecimalField('Долгота', max_digits=9, decimal_places=6, blank=True, null=True)
     latitude = models.DecimalField('Широта', max_digits=9, decimal_places=6, blank=True, null=True)
     bank_card = models.CharField(max_length=16, blank=True, null=True)
-    image = models.FileField(blank=True, null=True)
+    image = models.FileField(blank=True, null=True, upload_to=f'participant_images/')
+    owner_confirm = models.BooleanField(default=False)
+    participant_sent = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'et_trade'
