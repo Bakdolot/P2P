@@ -1,11 +1,11 @@
 from django_filters.rest_framework import FilterSet
 from django_filters import NumericRangeFilter
-from .models import TradeCash, TradeCript
+from .models import Trade
 
 
 class TradeListFilter(FilterSet):
     quantity = NumericRangeFilter()
 
     class Meta:
-        model = TradeCript
+        model = Trade
         fields = ['sell_currency', 'buy_currency', 'quantity']

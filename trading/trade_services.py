@@ -1,5 +1,5 @@
 from decimal import Decimal
-from .models import EtBalance, EtAuthTokens, EtCurrency, TradeCript
+from .models import EtBalance, EtAuthTokens, EtCurrency
 from django.db import transaction
 
 

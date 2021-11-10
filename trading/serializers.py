@@ -1,47 +1,24 @@
 from rest_framework import serializers
-from .models import TradeCript, TradeCash
+from .models import Trade
 
 
-class CreateTradeCriptSerializer(serializers.ModelSerializer):
+class CreateTradeSerializer(serializers.ModelSerializer):
     
     class Meta:
-        model = TradeCript
+        model = Trade
         exclude = ['create_at', 'participant', 'updated_at', 'status', 'is_active']
 
 
-class RetrieveTradeCriptSerializer(serializers.ModelSerializer):
+class RetrieveTradeSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = TradeCript
+        model = Trade
         fields = '__all__'
 
 
-class RetrieveTradeCashSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = TradeCash
-        fields = '__all__'
-
-
-class CreateTradeCashSerializer(serializers.ModelSerializer):
-    
-    class Meta:
-        model = TradeCash
-        exclude = ['create_at', 'participant', 'updated_at', 'status', 'is_active']
-
-
-class UpdateTradeCriptSerializer(serializers.ModelSerializer):
+class UpdateTradeSerializer(serializers.ModelSerializer):
 
     class Meta:
 
-        model = TradeCript
+        model = Trade
         exclude = ['owner', 'create_at', 'participant', 'updated_at', 'status']
-
-
-class UpdateTradeCashSerializer(serializers.ModelSerializer):
-
-    class Meta:
-
-        model = TradeCash
-        exclude = ['owner', 'create_at', 'participant', 'updated_at', 'status']
-
