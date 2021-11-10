@@ -4,8 +4,15 @@ from .models import Trade
 
 
 class TradeListFilter(FilterSet):
-    quantity = NumericRangeFilter()
+    sell_quantity = NumericRangeFilter()
+    buy_quantity = NumericRangeFilter()
 
     class Meta:
         model = Trade
-        fields = ['sell_currency', 'buy_currency', 'quantity']
+        fields = [
+            'sell_currency', 
+            'buy_currency', 
+            'buy_quantity', 
+            'sell_quantity', 
+            'type'
+            ]

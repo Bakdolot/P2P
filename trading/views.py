@@ -1,23 +1,25 @@
+from decimal import Decimal
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 from django_filters import rest_framework as filters
+from django.db import transaction
 
 from .filters import TradeListFilter
-from .models import Trade
-from .trade_services import checking_and_debiting_balance, get_login, make_transaction
+from .models import EtBalance, EtCurrency, EtUsers, Trade
+from .trade_services import checking_and_debiting_balance, make_transaction
 from .serializers import (
     UpdateTradeSerializer, 
     CreateTradeSerializer, 
     RetrieveTradeSerializer
     )
-from .permissions import IsOwnerOrReadOnly
+from .permissions import IsOwnerOrReadOnly, IsOwner
 
 
 class TradeListView(generics.ListAPIView):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = TradeListFilter
-    queryset = Trade.objects.filter(is_active=True)
+    queryset = Trade.objects.filter(is_active=True, status='1', participant=None)
     serializer_class = CreateTradeSerializer
 
 
@@ -27,8 +29,7 @@ class TradeCreateView(generics.CreateAPIView):
     serializer_class = CreateTradeSerializer
 
     def create(self, request, *args, **kwargs):
-        token = request.META.get('HTTP_AUTHORIZATION').split(' ')[1]
-        login = get_login(token)
+        login = request.user.login
         data = request.POST.copy()
         if checking_and_debiting_balance(login, data['sell_quantity'], data['sell_currency']):
             data['owner'] = login
@@ -57,16 +58,18 @@ class TradeJoinView(generics.GenericAPIView):
     def put(self, request, pk, *args, **kwargs):
         try:
             trade = generics.get_object_or_404(Trade, id=pk)
-            login = get_login(request.META.get('HTTP_AUTHORIZATION').split(' ')[1])
+            login = request.user.login
 
             if trade.type == '2':
                 trade.participant = login
+                trade.status = '2'
                 trade.save()
                 return Response({'status': 'SUCCESS'}, status=status.HTTP_202_ACCEPTED)
 
             elif trade.type == '1':
                 if checking_and_debiting_balance(login, trade.buy_quantity, trade.buy_currency):
                     trade.participant = login
+                    trade.status = '2'
                     trade.save()
 
                     if make_transaction(trade):
@@ -80,3 +83,21 @@ class TradeJoinView(generics.GenericAPIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
+
+
+class AcceptTradeView(generics.GenericAPIView):
+    permission_classes = [IsOwner]
+
+    def put(self, request, pk, *args, **kwargs):
+        try:
+            with transaction.atomic():
+                trade = generics.get_object_or_404(Trade.objects.filter(is_active=True, status='2', type='2'), id=pk)
+                sell_currency = EtCurrency.objects.get(id=trade.sell_currency)
+                user = EtBalance.objects.get(login=trade.participant, currency=sell_currency.alias)
+                user.balance = str(Decimal(user.balance) + Decimal(trade.sell_quantity))
+                trade.status = '3'
+                trade.save()
+                user.save()
+                return Response({'status': 'SUCCESS'}, status=status.HTTP_202_ACCEPTED)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

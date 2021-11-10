@@ -8,6 +8,12 @@ class Trade(models.Model):
         ('3', 'Trade with card')
     )
 
+    STATUS_CHOICES = (
+        ('1', 'in anticipation'),
+        ('2', 'in processing'),
+        ('3', 'finished')
+    )
+
     owner = models.CharField('Email продавца', max_length=150)
     is_active = models.BooleanField('Активность', default=True)
     sell_currency = models.IntegerField('ID продаваемой крипты')
@@ -17,7 +23,7 @@ class Trade(models.Model):
     create_at = models.DateTimeField('Дата создания', auto_now_add=True)
     updated_at = models.DateTimeField('Изменено', auto_now=True)
     participant = models.CharField('Email покупателя', blank=True, max_length=150)
-    status = models.CharField('Статус сделки', max_length=30)
+    status = models.CharField('Статус сделки', max_length=30, choices=STATUS_CHOICES)
     type = models.CharField('Тип сделки', max_length=10, choices=TYPE_CHOICES)
     description = models.TextField('Описание', blank=True, null=True)
     phone = models.CharField('Телефонный номер', max_length=50, blank=True, null=True)
