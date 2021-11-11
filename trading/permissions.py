@@ -27,10 +27,12 @@ class IsOwner(permissions.BasePermission):
 class CustomIsAuthOrReadOnly(permissions.BasePermission):
 
     def has_permission(self, request, view):
-        return bool(
-            request.method in permissions.SAFE_METHODS or
-            request.user
-        )
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        try:
+            return bool(request.user.login)
+        except BaseException as e:
+            return False
 
 
 class IsParticipant(permissions.BasePermission):
@@ -41,6 +43,12 @@ class IsParticipant(permissions.BasePermission):
             return obj.participant == login
         except Exception as e:
             return False
+
+
+class IsNotOwner(IsOwner):
+
+    def has_object_permission(self, request, view, obj):
+        return not super().has_object_permission(request, view, obj)
 
 
 class IsStarted(permissions.BasePermission):
