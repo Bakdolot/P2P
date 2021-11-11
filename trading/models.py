@@ -19,8 +19,8 @@ class Trade(models.Model):
 
     owner = models.CharField('Email продавца', max_length=150)
     is_active = models.BooleanField('Активность', default=True)
-    sell_currency = models.IntegerField('ID продаваемой крипты')
-    buy_currency = models.IntegerField('ID покупаемой крипты')
+    sell_currency = models.CharField('Продаваемая крипта', max_length=12)
+    buy_currency = models.CharField('Покупаемая крипта', max_length=12)
     sell_quantity = models.CharField('Сумма продаваемой крипты', max_length=32)
     buy_quantity = models.CharField('Сумма покупаемой крипты', max_length=32)
     create_at = UnixTimeStampField(auto_now_add=True)

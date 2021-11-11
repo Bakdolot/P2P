@@ -16,8 +16,7 @@ def checking_and_debiting_balance(login: str, quantity: str, currency: int) -> b
     """
     try:
         with transaction.atomic():
-            currency = EtCurrency.objects.get(id=currency)
-            balance = EtBalance.objects.get(login=login, currency=currency.alias)
+            balance = EtBalance.objects.get(login=login, currency=currency)
 
             if Decimal(balance.balance) >= Decimal(quantity):
                 balance.balance = str(Decimal(balance.balance) - Decimal(quantity))
@@ -33,12 +32,10 @@ def make_transaction(trade) -> bool:
     try:
         with transaction.atomic():
             commission = EtParameters.objects.get(categories='otc', alias='commission')
-            if trade.type == 'cript':  # Крипта
-                sell_currency = EtCurrency.objects.get(id=trade.sell_currency)
-                buy_currency = EtCurrency.objects.get(id=trade.buy_currency)
 
-                owner = EtBalance.objects.get(login=trade.owner, currency=buy_currency.alias)
-                participant = EtBalance.objects.get(login=trade.participant, currency=sell_currency.alias)
+            if trade.type == 'cript':  # Крипта
+                owner = EtBalance.objects.get(login=trade.owner, currency=trade.buy_currency)
+                participant = EtBalance.objects.get(login=trade.participant, currency=trade.sell_currency)
 
                 owner.balance = str(Decimal(owner.balance) + Decimal(trade.buy_quantity))
                 participant.balance = str(Decimal(participant.balance) + Decimal(get_commission(
@@ -53,9 +50,8 @@ def make_transaction(trade) -> bool:
                 return True
 
             elif trade.type == 'card':  # Карта
-                sell_currency = EtCurrency.objects.get(id=trade.sell_currency)
 
-                participant = EtBalance.objects.get(login=trade.participant, currency=sell_currency.alias)
+                participant = EtBalance.objects.get(login=trade.participant, currency=trade.sell_currency)
 
                 participant.balance = str(Decimal(participant.balance) + Decimal(trade.sell_quantity))
                 participant.save()
