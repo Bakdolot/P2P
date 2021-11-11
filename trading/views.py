@@ -9,11 +9,11 @@ from .filters import TradeListFilter
 from .models import EtBalance, EtCurrency, EtUsers, Trade
 from .trade_services import checking_and_debiting_balance, make_transaction, send_notification
 from .serializers import (
-    UpdateTradeSerializer, 
-    CreateTradeSerializer, 
+    UpdateTradeSerializer,
+    CreateTradeSerializer,
     RetrieveTradeSerializer,
     AcceptCardPaymentTradeSerializer
-    )
+)
 from .permissions import IsOwnerOrReadOnly, IsOwner
 
 
@@ -132,6 +132,3 @@ class AcceptCardPaymentTradeView(generics.RetrieveUpdateAPIView):
             trade.save()
             send_notification(trade.owner)
             return Response({'participant': 'sent'}, status=status.HTTP_202_ACCEPTED)
-
-
-
