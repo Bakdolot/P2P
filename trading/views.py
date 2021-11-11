@@ -32,7 +32,6 @@ class TradeListView(generics.ListAPIView):
 
 class TradeCreateView(generics.CreateAPIView):
     queryset = Trade
-
     serializer_class = CreateTradeSerializer
 
     def create(self, request, *args, **kwargs):
@@ -102,6 +101,7 @@ class TradeJoinView(generics.GenericAPIView):
     queryset = Trade.objects.filter(status='expectation', is_active=True)
 
     def put(self, request, *args, **kwargs):
+
         try:
             trade = self.get_object()
             login = request.user.login
