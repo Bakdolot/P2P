@@ -80,7 +80,7 @@ class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class AcceptCardReceivedPaymentTradeView(generics.GenericAPIView):
-    queryset = Trade.objects.all()
+    queryset = Trade.objects.filter(type='card', status='process', participant_sent=False)
     permission_classes = [IsOwner]
     
     def put(self, request, *args, **kwargs):
@@ -150,8 +150,9 @@ class AcceptTradeView(generics.GenericAPIView):  # Наличка
 
 
 class AcceptCardSentPaymentTradeView(generics.RetrieveUpdateAPIView):  # Карта
-    queryset = Trade.objects.filter(is_active=True, type='card')
+    queryset = Trade.objects.filter(is_active=True, type='card', participant_sent=False)
     serializer_class = AcceptCardPaymentTradeSerializer
+    permission_classes = [IsParticipant]
 
     def put(self, request, *args, **kwargs):
         if super().put(request, *args, **kwargs):
