@@ -67,8 +67,7 @@ class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
     
     def delete(self, request, *args, **kwargs):
         trade = self.get_object()
-        sell_currency = EtCurrency.objects.get(id=trade.sell_currency)
-        user_balance = EtBalance.objects.get(login=trade.owner, currency=sell_currency.alias)
+        user_balance = EtBalance.objects.get(login=trade.owner, currency=trade.sell_currency)
 
         user_balance = str(Decimal(user_balance.balance) + Decimal(trade.sell_quantity))
         user_balance.save()
@@ -133,8 +132,7 @@ class AcceptTradeView(generics.GenericAPIView):  # Наличка
         try:
             with transaction.atomic():
                 trade = self.get_object()
-                sell_currency = EtCurrency.objects.get(id=trade.sell_currency)
-                user = EtBalance.objects.get(login=trade.participant, currency=sell_currency.alias)
+                user = EtBalance.objects.get(login=trade.participant, currency=trade.sell_currency)
                 user.balance = str(Decimal(user.balance) + Decimal(trade.sell_quantity))
                 trade.status = '3'
                 trade.save()
