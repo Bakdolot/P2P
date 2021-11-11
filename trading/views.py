@@ -7,8 +7,8 @@ from django_filters import rest_framework as filters
 from django.db import transaction
 
 from .filters import TradeListFilter
-from .models import EtBalance, EtCurrency, EtUsers, Trade
-from .trade_services import checking_and_debiting_balance, make_transaction, send_notification
+from .models import EtBalance, EtCurrency, EtUsers, Trade, EtParameters
+from .trade_services import checking_and_debiting_balance, make_transaction, send_notification, get_commission
 from .serializers import (
     UpdateTradeSerializer,
     CreateTradeSerializer,
@@ -36,7 +36,11 @@ class TradeCreateView(generics.CreateAPIView):
         data = request.POST.copy()
         with transaction.atomic():
             if checking_and_debiting_balance(login, data['sell_quantity'], data['sell_currency']):
+                commission = EtParameters.objects.get(categories='otc', alias='commission')
+
                 data['owner'] = login
+                data['sell_quantity_with_commission'] = get_commission(Decimal(data['sell_quantity']), commission.value)
+
                 serializer = self.get_serializer(data=data)
                 serializer.is_valid(raise_exception=True)
                 self.perform_create(serializer)

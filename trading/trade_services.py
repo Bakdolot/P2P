@@ -23,6 +23,7 @@ def checking_and_debiting_balance(login: str, quantity: str, currency: int) -> b
                 balance.save(update_fields=['balance'])
                 return True
     except Exception as e:
+        print(e)
         return False
 
     return False

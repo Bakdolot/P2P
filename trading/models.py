@@ -2,6 +2,7 @@ from django.db import models
 
 from unixtimestampfield.fields import UnixTimeStampField
 
+
 class Trade(models.Model):
     def upload_to(self) -> str:
         return f'participant_images/{self.participant}/'
