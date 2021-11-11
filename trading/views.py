@@ -10,11 +10,12 @@ from .filters import TradeListFilter
 from .models import EtBalance, EtCurrency, EtUsers, Trade
 from .trade_services import checking_and_debiting_balance, make_transaction, send_notification
 from .serializers import (
-    UpdateTradeSerializer, 
-    CreateTradeSerializer, 
+    UpdateTradeSerializer,
+    CreateTradeSerializer,
     RetrieveTradeSerializer,
     AcceptCardPaymentTradeSerializer
-    )
+)
+
 from .permissions import IsOwnerOrReadOnly, IsOwner, IsParticipant, IsStarted
 
 
@@ -69,7 +70,7 @@ class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
         sell_currency = EtCurrency.objects.get(id=trade.sell_currency)
         user_balance = EtBalance.objects.get(login=trade.owner, currency=sell_currency.alias)
 
-        user_balance = Decimal(user_balance.balance) + Decimal(trade.sell_quantity)
+        user_balance = str(Decimal(user_balance.balance) + Decimal(trade.sell_quantity))
         user_balance.save()
         return super().delete(request, *args, **kwargs)
 
@@ -111,8 +112,6 @@ class TradeJoinView(generics.GenericAPIView):
                 if checking_and_debiting_balance(login, trade.buy_quantity, trade.buy_currency):
                     trade.participant = login
                     if make_transaction(trade):
-                        trade.status = '2'
-                        trade.save()
                         return Response({'status': 'SUCCESS'}, status=status.HTTP_202_ACCEPTED)
 
             elif trade.type == '3':
@@ -126,7 +125,7 @@ class TradeJoinView(generics.GenericAPIView):
         return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
 
 
-class AcceptTradeView(generics.GenericAPIView):
+class AcceptTradeView(generics.GenericAPIView):  # Наличка
     permission_classes = [IsOwner]
     queryset = Trade.objects.filter(is_active=True, status='2', type='2')
 
@@ -146,7 +145,7 @@ class AcceptTradeView(generics.GenericAPIView):
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class AcceptCardSentPaymentTradeView(generics.RetrieveUpdateAPIView):
+class AcceptCardSentPaymentTradeView(generics.RetrieveUpdateAPIView):  # Карта
     queryset = Trade.objects.filter(is_active=True, type=3)
     serializer_class = AcceptCardPaymentTradeSerializer
 
@@ -172,3 +171,4 @@ class TradeQuitView(generics.GenericAPIView):
             return Response({'participant': 'quited'}, status=status.HTTP_202_ACCEPTED)
 
         return Response(status=status.HTTP_400_BAD_REQUEST)
+

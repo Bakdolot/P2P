@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Trade, EtBalance, EtAuthTokens
+from .models import Trade, EtBalance, EtAuthTokens, EtParameters
 
 
 # Register your models here.
@@ -21,3 +21,8 @@ class EtBalance(admin.ModelAdmin):
 @admin.register(EtAuthTokens)
 class EtAuthTokens(admin.ModelAdmin):
     list_display = ('login', 'token')
+
+
+@admin.register(EtParameters)
+class EtParametersAdmin(admin.ModelAdmin):
+    list_display = ('id', 'categories', 'name', 'alias', 'value', 'sort')
