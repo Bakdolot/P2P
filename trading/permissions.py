@@ -31,3 +31,13 @@ class CustomIsAuthOrReadOnly(permissions.BasePermission):
             request.method in permissions.SAFE_METHODS or
             request.user
         )
+
+
+class IsParticipant(permissions.BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+        try:
+            login = request.user.login
+            return obj.participant == login
+        except Exception as e:
+            return False
