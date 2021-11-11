@@ -22,7 +22,7 @@ from .permissions import IsOwnerOrReadOnly, IsOwner, IsParticipant, IsStarted
 class TradeListView(generics.ListAPIView):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = TradeListFilter
-    queryset = Trade.objects.filter(is_active=True, status='1')
+    queryset = Trade.objects.filter(is_active=True, status='expectation')
     serializer_class = RetrieveTradeSerializer
 
 
@@ -47,7 +47,7 @@ class TradeCreateView(generics.CreateAPIView):
 
 
 class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Trade.objects.filter(is_active=True, status='1')
+    queryset = Trade.objects.filter(is_active=True, status='expectation')
     serializer_class = UpdateTradeSerializer
     permission_classes = [IsOwnerOrReadOnly, IsStarted]
 
@@ -95,30 +95,30 @@ class AcceptCardReceivedPaymentTradeView(generics.GenericAPIView):
 
 
 class TradeJoinView(generics.GenericAPIView):
-    queryset = Trade.objects.filter(status='1', is_active=True)
+    queryset = Trade.objects.filter(status='expectation', is_active=True)
 
     def put(self, request, *args, **kwargs):
         try:
             trade = self.get_object()
             login = request.user.login
 
-            if trade.type == '2':
+            if trade.type == 'cash':
                 trade.participant = login
-                trade.status = '2'
+                trade.status = 'process'
                 trade.save()
-                return Response({'status': 'SUCCESS'}, status=status.HTTP_202_ACCEPTED)
+                return Response({'status': 'SUCCESS JOIN'}, status=status.HTTP_202_ACCEPTED)
 
-            elif trade.type == '1':
+            elif trade.type == 'cript':
                 if checking_and_debiting_balance(login, trade.buy_quantity, trade.buy_currency):
                     trade.participant = login
                     if make_transaction(trade):
-                        return Response({'status': 'SUCCESS'}, status=status.HTTP_202_ACCEPTED)
+                        return Response({'status': 'SUCCESS TRADE WAS COMPLETED'}, status=status.HTTP_202_ACCEPTED)
 
-            elif trade.type == '3':
+            elif trade.type == 'card':
                 trade.participant = login
-                trade.status = '2'
+                trade.status = 'process'
                 trade.save()
-                return Response({'status': 'SUCCESS'}, status=status.HTTP_202_ACCEPTED)
+                return Response({'status': 'SUCCESS JOIN'}, status=status.HTTP_202_ACCEPTED)
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -127,7 +127,7 @@ class TradeJoinView(generics.GenericAPIView):
 
 class AcceptTradeView(generics.GenericAPIView):  # Наличка
     permission_classes = [IsOwner]
-    queryset = Trade.objects.filter(is_active=True, status='2', type='2')
+    queryset = Trade.objects.filter(is_active=True, status='process', type='cash')
 
     def put(self, request, *args, **kwargs):
         try:
@@ -146,7 +146,7 @@ class AcceptTradeView(generics.GenericAPIView):  # Наличка
 
 
 class AcceptCardSentPaymentTradeView(generics.RetrieveUpdateAPIView):  # Карта
-    queryset = Trade.objects.filter(is_active=True, type=3)
+    queryset = Trade.objects.filter(is_active=True, type='card')
     serializer_class = AcceptCardPaymentTradeSerializer
 
     def put(self, request, *args, **kwargs):
@@ -160,13 +160,13 @@ class AcceptCardSentPaymentTradeView(generics.RetrieveUpdateAPIView):  # Кар�
 
 class TradeQuitView(generics.GenericAPIView):
     permission_classes = [IsParticipant]
-    queryset = Trade.objects.filter(status='2')
+    queryset = Trade.objects.filter(status='process')
 
     def put(self, request, *args, **kwargs):
         trade = self.get_object()
-        if trade.type == '2' or (trade.type == '3' and not trade.participant_sent):
+        if trade.type == 'cash' or (trade.type == 'card' and not trade.participant_sent):
             trade.participant_sent = None
-            trade.status = '1'
+            trade.status = 'expectation'
             trade.save()
             return Response({'participant': 'quited'}, status=status.HTTP_202_ACCEPTED)
 

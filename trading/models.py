@@ -7,14 +7,14 @@ class Trade(models.Model):
         return f'participant_images/{self.participant}/'
 
     TYPE_CHOICES = (
-        ('1', 'Trade With cript'),
-        ('2', 'Trade with cash'),
-        ('3', 'Trade with card')
+        ('cript', 'Trade With cript'),
+        ('cash', 'Trade with cash'),
+        ('card', 'Trade with card')
     )
     STATUS_CHOICES = (
-        ('1', 'in anticipation'),
-        ('2', 'in processing'),
-        ('3', 'finished')
+        ('expectation', 'expectation'),
+        ('process', 'in processing'),
+        ('finished', 'finished')
     )
 
     owner = models.CharField('Email продавца', max_length=150)
@@ -26,12 +26,12 @@ class Trade(models.Model):
     create_at = UnixTimeStampField(auto_now_add=True)
     updated_at = UnixTimeStampField(auto_now=True)
     participant = models.CharField('Email покупателя', blank=True, max_length=150, null=True)
-    status = models.CharField('Статус сделки', max_length=30, choices=STATUS_CHOICES, default='1')
+    status = models.CharField('Статус сделки', max_length=30, choices=STATUS_CHOICES, default='expectation')
     type = models.CharField('Тип сделки', max_length=10, choices=TYPE_CHOICES)
     description = models.TextField('Описание', blank=True, null=True)
     phone = models.CharField('Телефонный номер', max_length=50, blank=True, null=True)
     longitude = models.CharField('Долгота', max_length=12, blank=True, null=True)
-    latitude = models.CharField('Широта', max_length=12, decimal_places=6, blank=True, null=True)
+    latitude = models.CharField('Широта', max_length=12, blank=True, null=True)
     bank_card = models.CharField(max_length=16, blank=True, null=True)
     image = models.FileField(blank=True, null=True, upload_to=f'participant_images/')
     owner_confirm = models.BooleanField(default=False, blank=True, null=True)

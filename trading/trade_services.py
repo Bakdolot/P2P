@@ -33,7 +33,7 @@ def make_transaction(trade) -> bool:
     try:
         with transaction.atomic():
             commission = EtParameters.objects.get(categories='otc', alias='commission')
-            if trade.type == '1':  # Крипта
+            if trade.type == 'cript':  # Крипта
                 sell_currency = EtCurrency.objects.get(id=trade.sell_currency)
                 buy_currency = EtCurrency.objects.get(id=trade.buy_currency)
 
@@ -47,12 +47,12 @@ def make_transaction(trade) -> bool:
                 owner.save()
                 participant.save()
 
-                trade.status = '3'
+                trade.status = 'finished'
                 trade.is_active = False
                 trade.save()
                 return True
 
-            elif trade.type == '3':  # Карта
+            elif trade.type == 'card':  # Карта
                 sell_currency = EtCurrency.objects.get(id=trade.sell_currency)
 
                 participant = EtBalance.objects.get(login=trade.participant, currency=sell_currency.alias)
@@ -60,7 +60,7 @@ def make_transaction(trade) -> bool:
                 participant.balance = str(Decimal(participant.balance) + Decimal(trade.sell_quantity))
                 participant.save()
 
-                trade.status = '3'
+                trade.status = 'finished'
                 trade.save()
                 return True
 
