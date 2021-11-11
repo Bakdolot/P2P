@@ -1,4 +1,5 @@
 from decimal import Decimal
+from django.http import request
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
@@ -14,14 +15,14 @@ from .serializers import (
     RetrieveTradeSerializer,
     AcceptCardPaymentTradeSerializer
 )
-from .permissions import IsOwnerOrReadOnly, IsOwner
+from .permissions import IsOwnerOrReadOnly, IsOwner, IsParticipant
 
 
 class TradeListView(generics.ListAPIView):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = TradeListFilter
-    queryset = Trade.objects.filter(is_active=True, status='1', participant=None)
-    serializer_class = CreateTradeSerializer
+    queryset = Trade.objects.filter(is_active=True, status='1')
+    serializer_class = RetrieveTradeSerializer
 
 
 class TradeCreateView(generics.CreateAPIView):
@@ -45,7 +46,7 @@ class TradeCreateView(generics.CreateAPIView):
 
 
 class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Trade.objects.filter(is_active=True)
+    queryset = Trade.objects.filter(is_active=True, status='1')
     serializer_class = UpdateTradeSerializer
     permission_classes = [IsOwnerOrReadOnly]
 
@@ -53,18 +54,29 @@ class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method == 'GET':
             return RetrieveTradeSerializer
         return super().get_serializer_class()
+    
+    def get_queryset(self):
+        trade = generics.get_object_or_404(Trade, id=self.kwargs.get('pk'))
+        if self.request.user.login == trade.owner: 
+            return Trade.objects.all()
+        return super().get_queryset()
 
+
+class AcceptCardReceivedPaymentTradeView(generics.GenericAPIView):
+    queryset = Trade.objects.all()
+    permission_classes = [IsOwner]
+    
     def put(self, request, *args, **kwargs):
-        super().put(request, *args, **kwargs)
         trade = self.get_object()
-        if trade.owner_confirm:
-            try:
-                if make_transaction(trade):
-                    return Response(
-                        {'status': 'Trade was completed successfully'},
-                        status=status.HTTP_202_ACCEPTED)
-            except Exception as e:
-                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            if make_transaction(trade):
+                trade.owner_confirm = True
+                trade.save()
+                return Response(
+                    {'status': 'Trade was completed successfully'},
+                    status=status.HTTP_202_ACCEPTED)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(status=status.HTTP_202_ACCEPTED)
 
@@ -103,12 +115,12 @@ class TradeJoinView(generics.GenericAPIView):
 
 class AcceptTradeView(generics.GenericAPIView):
     permission_classes = [IsOwner]
+    queryset = Trade.objects.filter(is_active=True, status='2', type='2')
 
     def put(self, request, pk, *args, **kwargs):
         try:
             with transaction.atomic():
-                trade = generics.get_object_or_404(
-                    Trade.objects.filter(is_active=True, status='2', type='2'), id=pk)
+                trade = self.get_object()
                 sell_currency = EtCurrency.objects.get(id=trade.sell_currency)
                 user = EtBalance.objects.get(login=trade.participant, currency=sell_currency.alias)
                 user.balance = str(Decimal(user.balance) + Decimal(trade.sell_quantity))
@@ -121,7 +133,7 @@ class AcceptTradeView(generics.GenericAPIView):
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class AcceptCardPaymentTradeView(generics.RetrieveUpdateAPIView):
+class AcceptCardSentPaymentTradeView(generics.RetrieveUpdateAPIView):
     queryset = Trade.objects.filter(is_active=True, type=3)
     serializer_class = AcceptCardPaymentTradeSerializer
 
@@ -132,3 +144,18 @@ class AcceptCardPaymentTradeView(generics.RetrieveUpdateAPIView):
             trade.save()
             send_notification(trade.owner)
             return Response({'participant': 'sent'}, status=status.HTTP_202_ACCEPTED)
+
+
+class TradeQuitView(generics.GenericAPIView):
+    permission_classes = [IsParticipant]
+    queryset = Trade.objects.all()
+
+    def put(self, request, *args, **kwargs):
+        trade = self.get_object()
+        if trade.type == '2' or trade.type == '3':
+            trade.participant_sent = ''
+            trade.status = '1'
+            trade.save()
+            return Response({'participant': 'quited'}, status=status.HTTP_202_ACCEPTED)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+

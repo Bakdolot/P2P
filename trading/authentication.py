@@ -15,5 +15,7 @@ class TradeAuthentication(authentication.BaseAuthentication):
             user = EtUsers.objects.get(login=login)
         except EtUsers.DoesNotExist:
             raise exceptions.AuthenticationFailed('No such user')
+        except:
+            raise exceptions.AuthenticationFailed('Incorrect authentication token')
 
         return (user, None)

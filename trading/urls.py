@@ -3,8 +3,10 @@ from .views import (
     TradeJoinView, TradeListView,
     TradeCreateView, TradeUpdateView,
     AcceptTradeView,
-    AcceptCardPaymentTradeView
-                    )
+    AcceptCardSentPaymentTradeView,
+    AcceptCardReceivedPaymentTradeView,
+    TradeQuitView
+    )
 
 
 urlpatterns = [
@@ -13,5 +15,7 @@ urlpatterns = [
     path('join/<int:pk>/', TradeJoinView.as_view()),
     path('retrieve_update_delete/<int:pk>/', TradeUpdateView.as_view()),
     path('trade/accept/<int:pk>/', AcceptTradeView.as_view()),
-    path('accept_payment/<int:pk>/', AcceptCardPaymentTradeView.as_view()),
+    path('accept_payment/sent/<int:pk>/', AcceptCardSentPaymentTradeView.as_view()),
+    path('accept_payment/get/<int:pk>/', AcceptCardReceivedPaymentTradeView.as_view()),
+    path('quit/<int:pk>/', TradeQuitView.as_view())
 ]
