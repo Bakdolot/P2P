@@ -82,6 +82,7 @@ class AcceptCardReceivedPaymentTradeView(generics.GenericAPIView):
 
 
 class TradeJoinView(generics.GenericAPIView):
+    queryset = Trade.objects.filter(status=1, is_active=True)
 
     def put(self, request, pk, *args, **kwargs):
         try:
@@ -98,7 +99,8 @@ class TradeJoinView(generics.GenericAPIView):
                 if checking_and_debiting_balance(login, trade.buy_quantity, trade.buy_currency):
                     trade.participant = login
                     if make_transaction(trade):
-                        trade.status = '2'
+                        trade.status = '3'
+                        trade.is_active = False
                         trade.save()
                         return Response({'status': 'SUCCESS'}, status=status.HTTP_202_ACCEPTED)
 
@@ -113,7 +115,7 @@ class TradeJoinView(generics.GenericAPIView):
         return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
 
 
-class AcceptTradeView(generics.GenericAPIView):
+class AcceptTradeView(generics.GenericAPIView):  # Наличка
     permission_classes = [IsOwner]
     queryset = Trade.objects.filter(is_active=True, status='2', type='2')
 
@@ -133,7 +135,7 @@ class AcceptTradeView(generics.GenericAPIView):
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class AcceptCardSentPaymentTradeView(generics.RetrieveUpdateAPIView):
+class AcceptCardSentPaymentTradeView(generics.RetrieveUpdateAPIView):  # Карта
     queryset = Trade.objects.filter(is_active=True, type=3)
     serializer_class = AcceptCardPaymentTradeSerializer
 

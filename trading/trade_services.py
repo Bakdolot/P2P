@@ -1,6 +1,8 @@
 from decimal import Decimal
-from .models import EtBalance, EtAuthTokens, EtCurrency
 from django.db import transaction
+
+from .models import EtBalance, EtAuthTokens, EtCurrency, EtParameters
+from .utils import get_commission
 
 
 def get_login(token: str) -> str:
@@ -30,6 +32,7 @@ def checking_and_debiting_balance(login: str, quantity: str, currency: int) -> b
 def make_transaction(trade) -> bool:
     try:
         with transaction.atomic():
+            commission = EtParameters.objects.get(categories='otc', alias='commission')
             if trade.type == '1':  # Крипта
                 sell_currency = EtCurrency.objects.get(id=trade.sell_currency)
                 buy_currency = EtCurrency.objects.get(id=trade.buy_currency)
@@ -38,7 +41,8 @@ def make_transaction(trade) -> bool:
                 participant = EtBalance.objects.get(login=trade.participant, currency=sell_currency.alias)
 
                 owner.balance = str(Decimal(owner.balance) + Decimal(trade.buy_quantity))
-                participant.balance = str(Decimal(participant.balance) + Decimal(trade.sell_quantity))
+                participant.balance = str(Decimal(participant.balance) + Decimal(get_commission(
+                    trade.sell_quantity, commission.value)))
 
                 owner.save()
                 participant.save()
@@ -66,3 +70,5 @@ def make_transaction(trade) -> bool:
 
 def send_notification(email: str):
     pass
+
+
