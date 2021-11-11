@@ -27,6 +27,7 @@ def checking_and_debiting_balance(login: str, quantity: str, currency: int) -> b
                 balance.save(update_fields=['balance'])
                 return True
     except Exception as e:
+        print(e)
         return False
 
     return False
@@ -67,6 +68,18 @@ def make_transaction(trade) -> bool:
     except Exception as e:
         print(e)
         return False
+
+
+def delete_trade(trade):
+    with transaction.atomic():
+        try:
+            owner_balance = EtBalance.objects.get(login=trade.owner, currency=trade.currency)
+            owner_balance = str(Decimal(owner_balance.balance) + Decimal(trade.sell_quantity))
+            owner_balance.save()
+            return True
+        except Exception as e:
+            return False
+
 
 
 def send_notification(email: str):

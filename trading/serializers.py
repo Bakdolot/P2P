@@ -10,7 +10,7 @@ class CreateTradeSerializer(serializers.ModelSerializer):
             'create_at', 
             'participant', 
             'updated_at', 
-            # 'status', 
+            'status', 
             'is_active',
             'owner_confirm',
             'participant_sent'
