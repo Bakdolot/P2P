@@ -20,7 +20,7 @@ from .serializers import (
     AcceptCardPaymentTradeSerializer
 )
 from .utils import get_commission
-from .permissions import IsOwnerOrReadOnly, IsOwner, IsParticipant, IsStarted
+from .permissions import IsOwnerOrReadOnly, IsOwner, IsParticipant, IsStarted, IsNotOwner
 
 
 class TradeListView(generics.ListAPIView):
@@ -84,49 +84,43 @@ class AcceptCardReceivedPaymentTradeView(generics.GenericAPIView):
     
     def put(self, request, *args, **kwargs):
         trade = self.get_object()
-        try:
-            if make_transaction(trade):
-                trade.owner_confirm = True
-                trade.save()
-                return Response(
-                    {'status': 'Trade was completed successfully'},
-                    status=status.HTTP_202_ACCEPTED)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        if make_transaction(trade):
+            trade.owner_confirm = True
+            trade.save()
+            return Response(
+                {'status': 'Trade was completed successfully'},
+                status=status.HTTP_202_ACCEPTED)
 
         return Response(status=status.HTTP_202_ACCEPTED)
 
 
 class TradeJoinView(generics.GenericAPIView):
     queryset = Trade.objects.filter(status='expectation', is_active=True)
+    permission_classes = [IsNotOwner]
 
     def put(self, request, *args, **kwargs):
 
-        try:
-            trade = self.get_object()
-            login = request.user.login
+        trade = self.get_object()
+        login = request.user.login
 
-            if trade.type == 'cash':
+        if trade.type == 'cash':
+            trade.participant = login
+            trade.status = 'process'
+            trade.save()
+            return Response({'status': 'SUCCESS JOIN'}, status=status.HTTP_202_ACCEPTED)
+
+        elif trade.type == 'cript':
+            if checking_and_debiting_balance(login, trade.buy_quantity, trade.buy_currency):
                 trade.participant = login
-                trade.status = 'process'
-                trade.save()
-                return Response({'status': 'SUCCESS JOIN'}, status=status.HTTP_202_ACCEPTED)
+                if make_transaction(trade):
+                    return Response({'status': 'SUCCESS TRADE WAS COMPLETED'}, status=status.HTTP_202_ACCEPTED)
 
-            elif trade.type == 'cript':
-                if checking_and_debiting_balance(login, trade.buy_quantity, trade.buy_currency):
-                    trade.participant = login
-                    if make_transaction(trade):
-                        return Response({'status': 'SUCCESS TRADE WAS COMPLETED'}, status=status.HTTP_202_ACCEPTED)
+        elif trade.type == 'card':
+            trade.participant = login
+            trade.status = 'process'
+            trade.save()
+            return Response({'status': 'SUCCESS JOIN'}, status=status.HTTP_202_ACCEPTED)
 
-            elif trade.type == 'card':
-                trade.participant = login
-                trade.status = 'process'
-                trade.save()
-                return Response({'status': 'SUCCESS JOIN'}, status=status.HTTP_202_ACCEPTED)
-
-        except Exception as e:
-            print(e.with_traceback())
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
 
 
@@ -135,18 +129,14 @@ class AcceptTradeView(generics.GenericAPIView):  # Наличка
     queryset = Trade.objects.filter(is_active=True, status='process', type='cash')
 
     def put(self, request, *args, **kwargs):
-        try:
-            with transaction.atomic():
-                trade = self.get_object()
-                user = EtBalance.objects.get(login=trade.participant, currency=trade.sell_currency)
-                user.balance = str(Decimal(user.balance) + Decimal(trade.sell_quantity))
-                trade.status = '3'
-                trade.save()
-                user.save()
-                return Response({'status': 'SUCCESS'}, status=status.HTTP_202_ACCEPTED)
-
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        with transaction.atomic():
+            trade = self.get_object()
+            user = EtBalance.objects.get(login=trade.participant, currency=trade.sell_currency)
+            user.balance = str(Decimal(user.balance) + Decimal(trade.sell_quantity))
+            trade.status = '3'
+            trade.save()
+            user.save()
+            return Response({'status': 'SUCCESS'}, status=status.HTTP_202_ACCEPTED)
 
 
 class AcceptCardSentPaymentTradeView(generics.RetrieveUpdateAPIView):  # Карта

@@ -6,7 +6,16 @@ class CreateTradeSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Trade
-        exclude = ['create_at', 'participant', 'updated_at', 'status', 'is_active']
+
+        exclude = [
+            'create_at', 
+            'participant', 
+            'updated_at', 
+            'status', 
+            'is_active',
+            'owner_confirm',
+            'participant_sent'
+            ]
 
 
 class RetrieveTradeSerializer(serializers.ModelSerializer):
