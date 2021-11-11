@@ -7,15 +7,15 @@ from django_filters import rest_framework as filters
 from django.db import transaction
 
 from .filters import TradeListFilter
-from .models import EtBalance, EtCurrency, EtUsers, Trade
-from .trade_services import checking_and_debiting_balance, make_transaction, send_notification
+from .models import EtBalance, Trade
+from .trade_services import checking_and_debiting_balance, make_transaction, send_notification, get_commission_value
 from .serializers import (
     UpdateTradeSerializer,
     CreateTradeSerializer,
     RetrieveTradeSerializer,
     AcceptCardPaymentTradeSerializer
 )
-
+from .utils import get_commission
 from .permissions import IsOwnerOrReadOnly, IsOwner, IsParticipant, IsStarted
 
 
@@ -37,6 +37,7 @@ class TradeCreateView(generics.CreateAPIView):
         with transaction.atomic():
             if checking_and_debiting_balance(login, data['sell_quantity'], data['sell_currency']):
                 data['owner'] = login
+                data['sell_quantity_with_commission'] = get_commission(int(data.get('sell_quantity')), get_commission_value())
                 serializer = self.get_serializer(data=data)
                 serializer.is_valid(raise_exception=True)
                 self.perform_create(serializer)
@@ -120,6 +121,7 @@ class TradeJoinView(generics.GenericAPIView):
                 return Response({'status': 'SUCCESS JOIN'}, status=status.HTTP_202_ACCEPTED)
 
         except Exception as e:
+            print(e.with_traceback())
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
 
