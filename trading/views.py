@@ -63,6 +63,15 @@ class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
             return super().get_queryset()
         except AttributeError:
             return super().get_queryset()
+    
+    def delete(self, request, *args, **kwargs):
+        trade = self.get_object()
+        sell_currency = EtCurrency.objects.get(id=trade.sell_currency)
+        user_balance = EtBalance.objects.get(login=trade.owner, currency=sell_currency.alias)
+
+        user_balance = Decimal(user_balance.balance) + Decimal(trade.sell_quantity)
+        user_balance.save()
+        return super().delete(request, *args, **kwargs)
 
 
 class AcceptCardReceivedPaymentTradeView(generics.GenericAPIView):
@@ -87,7 +96,7 @@ class AcceptCardReceivedPaymentTradeView(generics.GenericAPIView):
 class TradeJoinView(generics.GenericAPIView):
     queryset = Trade.objects.filter(status='1', is_active=True)
 
-    def put(self, request, pk, *args, **kwargs):
+    def put(self, request, *args, **kwargs):
         try:
             trade = self.get_object()
             login = request.user.login
@@ -121,7 +130,7 @@ class AcceptTradeView(generics.GenericAPIView):
     permission_classes = [IsOwner]
     queryset = Trade.objects.filter(is_active=True, status='2', type='2')
 
-    def put(self, request, pk, *args, **kwargs):
+    def put(self, request, *args, **kwargs):
         try:
             with transaction.atomic():
                 trade = self.get_object()
@@ -152,7 +161,7 @@ class AcceptCardSentPaymentTradeView(generics.RetrieveUpdateAPIView):
 
 class TradeQuitView(generics.GenericAPIView):
     permission_classes = [IsParticipant]
-    queryset = Trade.objects.all()
+    queryset = Trade.objects.filter(status='2')
 
     def put(self, request, *args, **kwargs):
         trade = self.get_object()
