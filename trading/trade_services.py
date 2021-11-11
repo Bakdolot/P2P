@@ -10,6 +10,10 @@ def get_login(token: str) -> str:
     return user.login
 
 
+def get_commission_value():
+    return EtParameters.objects.get(categories='otc', alias='commission').value
+
+
 def checking_and_debiting_balance(login: str, quantity: str, currency: int) -> bool:
     """ Проверка баланса, если на балансе достаточно средств - они
         списываются со счета, в противном случае сделка не может быть создана
@@ -32,7 +36,7 @@ def checking_and_debiting_balance(login: str, quantity: str, currency: int) -> b
 def make_transaction(trade) -> bool:
     try:
         with transaction.atomic():
-            commission = EtParameters.objects.get(categories='otc', alias='commission')
+            commission = get_commission_value()
 
             if trade.type == 'cript':  # Крипта
                 owner = EtBalance.objects.get(login=trade.owner, currency=trade.buy_currency)
@@ -40,7 +44,7 @@ def make_transaction(trade) -> bool:
 
                 owner.balance = str(Decimal(owner.balance) + Decimal(trade.buy_quantity))
                 participant.balance = str(Decimal(participant.balance) + Decimal(get_commission(
-                    trade.sell_quantity, commission.value)))
+                    trade.sell_quantity, commission)))
 
                 owner.save()
                 participant.save()
@@ -64,6 +68,18 @@ def make_transaction(trade) -> bool:
     except Exception as e:
         print(e)
         return False
+
+
+def delete_trade(trade):
+    with transaction.atomic():
+        try:
+            owner_balance = EtBalance.objects.get(login=trade.owner, currency=trade.currency)
+            owner_balance = str(Decimal(owner_balance.balance) + Decimal(trade.sell_quantity))
+            owner_balance.save()
+            return True
+        except Exception as e:
+            return False
+
 
 
 def send_notification(email: str):
