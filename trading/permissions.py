@@ -41,3 +41,16 @@ class IsParticipant(permissions.BasePermission):
             return obj.participant == login
         except Exception as e:
             return False
+
+
+class IsStarted(permissions.BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+        try:
+            if request.method in permissions.SAFE_METHODS:
+                return True
+            if obj.status == '1':
+                return True
+            return False
+        except Exception as e:
+            return False

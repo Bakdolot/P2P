@@ -48,6 +48,7 @@ def make_transaction(trade) -> bool:
                 participant.save()
 
                 trade.status = '3'
+                trade.is_active = False
                 trade.save()
                 return True
 

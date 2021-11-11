@@ -21,7 +21,18 @@ class UpdateTradeSerializer(serializers.ModelSerializer):
     class Meta:
 
         model = Trade
-        exclude = ['owner', 'create_at', 'participant', 'updated_at', 'status']
+        fields = [
+            'is_active',
+            'sell_currency',
+            'buy_currency',
+            'sell_quantity',
+            'buy_quantity',
+            'description',
+            'phone',
+            'longitude',
+            'latitude',
+            'bank_card',
+        ]
 
 
 class AcceptCardPaymentTradeSerializer(serializers.ModelSerializer):
