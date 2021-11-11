@@ -22,6 +22,7 @@ class Trade(models.Model):
     sell_currency = models.CharField('Продаваемая крипта', max_length=12)
     buy_currency = models.CharField('Покупаемая крипта', max_length=12)
     sell_quantity = models.CharField('Сумма продаваемой крипты', max_length=32)
+    sell_quantity_with_commission = models.CharField('Сумма продажи с учетом комиссии', max_length=12)
     buy_quantity = models.CharField('Сумма покупаемой крипты', max_length=32)
     create_at = UnixTimeStampField(auto_now_add=True)
     updated_at = UnixTimeStampField(auto_now=True)
