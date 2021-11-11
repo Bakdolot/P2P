@@ -24,7 +24,7 @@ class Trade(models.Model):
     buy_quantity = models.DecimalField('Сумма покупаемой крипты', max_digits=19, decimal_places=10)
     create_at = models.DateTimeField('Дата создания', auto_now_add=True)
     updated_at = models.DateTimeField('Изменено', auto_now=True)
-    participant = models.CharField('Email покупателя', blank=True, max_length=150)
+    participant = models.CharField('Email покупателя', blank=True, max_length=150, null=True)
     status = models.CharField('Статус сделки', max_length=30, choices=STATUS_CHOICES, default='1')
     type = models.CharField('Тип сделки', max_length=10, choices=TYPE_CHOICES)
     description = models.TextField('Описание', blank=True, null=True)
@@ -33,8 +33,8 @@ class Trade(models.Model):
     latitude = models.DecimalField('Широта', max_digits=9, decimal_places=6, blank=True, null=True)
     bank_card = models.CharField(max_length=16, blank=True, null=True)
     image = models.FileField(blank=True, null=True, upload_to=f'participant_images/')
-    owner_confirm = models.BooleanField(default=False)
-    participant_sent = models.BooleanField(default=False)
+    owner_confirm = models.BooleanField(default=False, blank=True, null=True)
+    participant_sent = models.BooleanField(default=False, blank=True, null=True)
 
     class Meta:
         db_table = 'et_trade'

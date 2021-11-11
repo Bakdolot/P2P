@@ -15,7 +15,7 @@ from .serializers import (
     RetrieveTradeSerializer,
     AcceptCardPaymentTradeSerializer
     )
-from .permissions import IsOwnerOrReadOnly, IsOwner, IsParticipant
+from .permissions import IsOwnerOrReadOnly, IsOwner, IsParticipant, IsStarted
 
 
 class TradeListView(generics.ListAPIView):
@@ -48,7 +48,7 @@ class TradeCreateView(generics.CreateAPIView):
 class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Trade.objects.filter(is_active=True, status='1')
     serializer_class = UpdateTradeSerializer
-    permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [IsOwnerOrReadOnly, IsStarted]
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
@@ -57,9 +57,12 @@ class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
     
     def get_queryset(self):
         trade = generics.get_object_or_404(Trade, id=self.kwargs.get('pk'))
-        if self.request.user.login == trade.owner: 
-            return Trade.objects.all()
-        return super().get_queryset()
+        try:
+            if self.request.user.login == trade.owner: 
+                return Trade.objects.all()
+            return super().get_queryset()
+        except AttributeError:
+            return super().get_queryset()
 
 
 class AcceptCardReceivedPaymentTradeView(generics.GenericAPIView):
@@ -82,10 +85,11 @@ class AcceptCardReceivedPaymentTradeView(generics.GenericAPIView):
 
 
 class TradeJoinView(generics.GenericAPIView):
+    queryset = Trade.objects.filter(status='1', is_active=True)
 
     def put(self, request, pk, *args, **kwargs):
         try:
-            trade = generics.get_object_or_404(Trade, id=pk)
+            trade = self.get_object()
             login = request.user.login
 
             if trade.type == '2':
@@ -152,9 +156,10 @@ class TradeQuitView(generics.GenericAPIView):
 
     def put(self, request, *args, **kwargs):
         trade = self.get_object()
-        if trade.type == '2' or trade.type == '3':
-            trade.participant_sent = ''
+        if trade.type == '2' or (trade.type == '3' and not trade.participant_sent):
+            trade.participant_sent = None
             trade.status = '1'
             trade.save()
             return Response({'participant': 'quited'}, status=status.HTTP_202_ACCEPTED)
+
         return Response(status=status.HTTP_400_BAD_REQUEST)
