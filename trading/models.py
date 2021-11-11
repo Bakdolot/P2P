@@ -31,7 +31,7 @@ class Trade(models.Model):
     description = models.TextField('Описание', blank=True, null=True)
     phone = models.CharField('Телефонный номер', max_length=50, blank=True, null=True)
     longitude = models.CharField('Долгота', max_length=12, blank=True, null=True)
-    latitude = models.CharField('Широта', max_length=12, decimal_places=6, blank=True, null=True)
+    latitude = models.CharField('Широта', max_length=12, blank=True, null=True)
     bank_card = models.CharField(max_length=16, blank=True, null=True)
     image = models.FileField(blank=True, null=True, upload_to=f'participant_images/')
     owner_confirm = models.BooleanField(default=False, blank=True, null=True)
