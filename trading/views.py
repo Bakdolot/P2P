@@ -133,7 +133,7 @@ class AcceptTradeView(generics.GenericAPIView):  # Наличка
             trade = self.get_object()
             user = EtBalance.objects.get(login=trade.participant, currency=trade.sell_currency)
             user.balance = str(Decimal(user.balance) + Decimal(trade.sell_quantity))
-            trade.status = '3'
+            trade.status = 'finished'
             trade.save()
             user.save()
             return Response({'status': 'SUCCESS'}, status=status.HTTP_202_ACCEPTED)
