@@ -1,4 +1,3 @@
-from decimal import Decimal
 from django.http import request
 from rest_framework import generics
 from rest_framework.response import Response
@@ -132,7 +131,7 @@ class AcceptTradeView(generics.GenericAPIView):  # Наличка
         with transaction.atomic():
             trade = self.get_object()
             user = EtBalance.objects.get(login=trade.participant, currency=trade.sell_currency)
-            user.balance = str(Decimal(user.balance) + Decimal(trade.sell_quantity))
+            user.balance = str(float(user.balance) + float(trade.sell_quantity))
             trade.status = 'finished'
             trade.save()
             user.save()

@@ -1,4 +1,3 @@
-from decimal import Decimal
 from django.db import transaction
 
 from .models import EtBalance, EtAuthTokens, EtCurrency, EtParameters
@@ -22,8 +21,8 @@ def checking_and_debiting_balance(login: str, quantity: str, currency: int) -> b
         with transaction.atomic():
             balance = EtBalance.objects.get(login=login, currency=currency)
 
-            if Decimal(balance.balance) >= Decimal(quantity):
-                balance.balance = str(Decimal(balance.balance) - Decimal(quantity))
+            if float(balance.balance) >= float(quantity):
+                balance.balance = str(float(balance.balance) - float(quantity))
                 balance.save(update_fields=['balance'])
                 return True
     except Exception as e:
@@ -42,9 +41,8 @@ def make_transaction(trade) -> bool:
                 owner = EtBalance.objects.get(login=trade.owner, currency=trade.buy_currency)
                 participant = EtBalance.objects.get(login=trade.participant, currency=trade.sell_currency)
 
-                owner.balance = str(Decimal(owner.balance) + Decimal(trade.buy_quantity))
-                participant.balance = str(Decimal(participant.balance) + Decimal(get_commission(
-                    trade.sell_quantity, commission)))
+                owner.balance = str(float(owner.balance) + float(trade.buy_quantity))
+                participant.balance = str(float(participant.balance) + float(trade.sell_quantity_with_commission))
 
                 owner.save()
                 participant.save()
@@ -58,7 +56,7 @@ def make_transaction(trade) -> bool:
 
                 participant = EtBalance.objects.get(login=trade.participant, currency=trade.sell_currency)
 
-                participant.balance = str(Decimal(participant.balance) + Decimal(trade.sell_quantity))
+                participant.balance = str(float(participant.balance) + float(trade.sell_quantity))
                 participant.save()
 
                 trade.status = 'finished'
@@ -74,7 +72,7 @@ def delete_trade(trade):
     with transaction.atomic():
         try:
             owner_balance = EtBalance.objects.get(login=trade.owner, currency=trade.currency)
-            owner_balance = str(Decimal(owner_balance.balance) + Decimal(trade.sell_quantity))
+            owner_balance = str(float(owner_balance.balance) + float(trade.sell_quantity))
             owner_balance.save()
             return True
         except Exception as e:
