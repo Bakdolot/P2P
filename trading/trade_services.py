@@ -35,7 +35,6 @@ def checking_and_debiting_balance(login: str, quantity: str, currency: int) -> b
 def make_transaction(trade) -> bool:
     try:
         with transaction.atomic():
-            commission = get_commission_value()
 
             if trade.type == 'cript':  # Крипта
                 owner = EtBalance.objects.get(login=trade.owner, currency=trade.buy_currency)
@@ -62,6 +61,15 @@ def make_transaction(trade) -> bool:
                 trade.status = 'finished'
                 trade.save()
                 return True
+            
+            elif trade.type == 'cash':
+                user = EtBalance.objects.get(login=trade.participant, currency=trade.sell_currency)
+
+                user.balance = str(float(user.balance) + float(trade.sell_quantity))
+                trade.status = 'finished'
+                
+                trade.save()
+                user.save()
 
     except Exception as e:
         print(e)

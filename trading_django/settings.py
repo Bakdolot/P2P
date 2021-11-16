@@ -26,7 +26,8 @@ INSTALLED_APPS = [
     'django_filters',
     'drf_yasg',
 
-    'trading'
+    'trading',
+    'internal_transfer'
 ]
 
 MIDDLEWARE = [
