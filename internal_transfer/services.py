@@ -34,9 +34,7 @@ def get_data(request) -> dict:
     data = request.data
     user = request.user.login
     if check_user_balance(user, data.get('currency'), data.get('sum')):
-        sum = get_sum_with_commission(data.get('sum'))
         balance_transfer(user, data.get('currency'), data.get('sum'), is_plus=False)
-        data['sum_with_commission'] = sum
         data['owner'] = user
         data['status'] = True
         return data
