@@ -3,9 +3,15 @@ from django.db import transaction
 from trading.models import EtBalance, EtParameters
 
 
-def check_recipient(login, currency):
+def check_user_wallet(login, currency):
     user = EtBalance.objects.filter(login=login, currency=currency)
     return bool(user)
+
+
+def get_sum_with_commission(sum: str, category: str) -> str:
+    commission = float(EtParameters.objects.get(categories=category, alias='commission').value) / 100
+    sum = str(float(sum)-(float(sum)*commission))
+    return sum
 
 
 def check_user_balance(user: str, currency: str, sum: str) -> bool:
@@ -24,12 +30,6 @@ def balance_transfer(user: str, currency: str, sum: str, is_plus=True):
         user_balance.save()
 
 
-def get_sum_with_commission(sum: str) -> str:
-    commission = float(EtParameters.objects.get(categories='internal_transfer', alias='commission').value) / 100
-    sum = str(float(sum)-(float(sum)*commission))
-    return sum
-
-
 def get_data(request) -> dict:
     data = request.data
     user = request.user.login
@@ -43,8 +43,7 @@ def get_data(request) -> dict:
 
 
 def transfer_data(transfer) -> bool:
-    user_balance = EtBalance.objects.filter(login=transfer.recipient, currency=transfer.currency)
-    if user_balance:
+    if check_user_wallet(transfer.recipient, transfer.currency):
         balance_transfer(transfer.recipient, transfer.currency, transfer.sum_with_commission, is_plus=True)
         transfer.status = True
         transfer.save()

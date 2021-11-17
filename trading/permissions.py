@@ -1,5 +1,4 @@
 from rest_framework import permissions
-from .trade_services import get_login
 
 
 class IsOwnerOrReadOnly(permissions.BasePermission):

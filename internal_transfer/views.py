@@ -2,11 +2,10 @@ from rest_framework import generics
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework import mixins
 from django.http import Http404
 
 from .models import InternalTransfer
-from .services import get_data, transfer_data, check_recipient
+from .services import get_data, transfer_data, check_user_wallet
 from .serializers import CreateTransferSerializer, GetTransferSerializer, UpdateTransferSerializer
 from trading.permissions import IsNotOwner
 from .permissions import IsOwnerOrRecipient, IsNotOwner
@@ -18,7 +17,7 @@ class CreateTransferView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         data = request.data
-        if not check_recipient(data.get('recipient'), data.get('currency')):
+        if not check_user_wallet(data.get('recipient'), data.get('currency')):
             return Response({'message': 'Recipient with this login does not exist'}, status=status.HTTP_400_BAD_REQUEST)
         data = get_data(request)
         if data['status']:

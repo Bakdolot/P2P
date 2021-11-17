@@ -1,24 +1,22 @@
-from django.http import request
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 from django_filters import rest_framework as filters
-from django.db import transaction
 
 from .filters import TradeListFilter
-from .models import EtBalance, Trade
+from .models import Trade
 from .trade_services import (
-    checking_and_debiting_balance,
-    make_transaction, send_notification,
-    get_commission_value, delete_trade
+    get_create_data, make_transaction, 
+    send_notification, get_create_data,
+    trade_update
 )
+from internal_transfer.services import balance_transfer, check_user_balance
 from .serializers import (
     UpdateTradeSerializer,
     CreateTradeSerializer,
     RetrieveTradeSerializer,
     AcceptCardPaymentTradeSerializer
 )
-from .utils import get_commission
 from .permissions import IsOwnerOrReadOnly, IsOwner, IsParticipant, IsStarted, IsNotOwner
 
 
@@ -34,19 +32,13 @@ class TradeCreateView(generics.CreateAPIView):
     serializer_class = CreateTradeSerializer
 
     def create(self, request, *args, **kwargs):
-        login = request.user.login
-        data = request.POST.copy()
-        with transaction.atomic():
-            if checking_and_debiting_balance(login, data['sell_quantity'], data['sell_currency']):
-
-                data['owner'] = login
-
-                data['sell_quantity_with_commission'] = get_commission(int(data.get('sell_quantity')), get_commission_value())
-                serializer = self.get_serializer(data=data)
-                serializer.is_valid(raise_exception=True)
-                self.perform_create(serializer)
-                headers = self.get_success_headers(serializer.data)
-                return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        data = get_create_data(request)
+        if data['data_status']:
+            serializer = self.get_serializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
         return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
 
@@ -66,15 +58,26 @@ class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
         try:
             if self.request.user.login == trade.owner: 
                 return Trade.objects.all()
-            return super().get_queryset()
         except AttributeError:
-            return super().get_queryset()
+            None
+        return super().get_queryset()
     
     def delete(self, request, *args, **kwargs):
         trade = self.get_object()
-        if delete_trade(trade):
-            return super().delete(request, *args, **kwargs)
-        return Response({'error': 'FAILED TO DELETE'}, status=status.HTTP_400_BAD_REQUEST)
+        balance_transfer(trade.owner, trade.sell_currency, trade.sell_quantity, is_plus=True)
+        return super().delete(request, *args, **kwargs)
+    
+    def put(self, request, *args, **kwargs):
+        trade = self.get_object()
+        if trade_update(request, trade):
+            return super().put(request, *args, **kwargs)
+        return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
+    
+    def patch(self, request, *args, **kwargs):
+        trade = self.get_object()
+        if trade_update(request, trade):
+            return super().patch(request, *args, **kwargs)
+        return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
 
 
 class AcceptCardReceivedPaymentTradeView(generics.GenericAPIView):
@@ -83,14 +86,12 @@ class AcceptCardReceivedPaymentTradeView(generics.GenericAPIView):
     
     def put(self, request, *args, **kwargs):
         trade = self.get_object()
-        if make_transaction(trade):
-            trade.owner_confirm = True
-            trade.save()
-            return Response(
-                {'status': 'Trade was completed successfully'},
-                status=status.HTTP_202_ACCEPTED)
-
-        return Response(status=status.HTTP_202_ACCEPTED)
+        make_transaction(trade)
+        trade.owner_confirm = True
+        trade.save()
+        return Response(
+            {'status': 'Trade was completed successfully'},
+            status=status.HTTP_202_ACCEPTED)
 
 
 class TradeJoinView(generics.GenericAPIView):
@@ -98,28 +99,18 @@ class TradeJoinView(generics.GenericAPIView):
     permission_classes = [IsNotOwner]
 
     def put(self, request, *args, **kwargs):
-
         trade = self.get_object()
         login = request.user.login
-
-        if trade.type == 'cash':
+        if trade.type == 'cash' or trade.type == 'card':
             trade.participant = login
             trade.status = 'process'
             trade.save()
             return Response({'status': 'SUCCESS JOIN'}, status=status.HTTP_202_ACCEPTED)
-
         elif trade.type == 'cript':
-            if checking_and_debiting_balance(login, trade.buy_quantity, trade.buy_currency):
+            if check_user_balance(login, trade.sell_currency, trade.sell_quantity):
                 trade.participant = login
-                if make_transaction(trade):
-                    return Response({'status': 'SUCCESS TRADE WAS COMPLETED'}, status=status.HTTP_202_ACCEPTED)
-
-        elif trade.type == 'card':
-            trade.participant = login
-            trade.status = 'process'
-            trade.save()
-            return Response({'status': 'SUCCESS JOIN'}, status=status.HTTP_202_ACCEPTED)
-
+                make_transaction(trade)
+                return Response({'status': 'SUCCESS TRADE WAS COMPLETED'}, status=status.HTTP_202_ACCEPTED)
         return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
 
 
@@ -129,11 +120,10 @@ class AcceptTradeView(generics.GenericAPIView):  # Наличка
 
     def put(self, request, *args, **kwargs):
         trade = self.get_object()
-        if make_transaction(trade):
-            return Response(
-                {'status': 'Trade was completed successfully'},
-                status=status.HTTP_202_ACCEPTED)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        make_transaction(trade)
+        return Response(
+            {'status': 'Trade was completed successfully'},
+            status=status.HTTP_202_ACCEPTED)
 
 
 class AcceptCardSentPaymentTradeView(generics.RetrieveUpdateAPIView):  # Карта
@@ -157,10 +147,8 @@ class TradeQuitView(generics.GenericAPIView):
     def put(self, request, *args, **kwargs):
         trade = self.get_object()
         if trade.type == 'cash' or (trade.type == 'card' and not trade.participant_sent):
-            trade.participant_sent = None
             trade.status = 'expectation'
             trade.save()
             return Response({'participant': 'quited'}, status=status.HTTP_202_ACCEPTED)
 
         return Response(status=status.HTTP_400_BAD_REQUEST)
-
