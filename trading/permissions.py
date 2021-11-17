@@ -57,7 +57,7 @@ class IsStarted(permissions.BasePermission):
         try:
             if request.method in permissions.SAFE_METHODS:
                 return True
-            if obj.status == '1':
+            if obj.status == 'expectation':
                 return True
             return False
         except Exception as e:

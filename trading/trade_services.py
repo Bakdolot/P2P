@@ -71,13 +71,13 @@ def make_transaction(trade) -> bool:
 def delete_trade(trade):
     with transaction.atomic():
         try:
-            owner_balance = EtBalance.objects.get(login=trade.owner, currency=trade.currency)
-            owner_balance = str(float(owner_balance.balance) + float(trade.sell_quantity))
+            owner_balance = EtBalance.objects.get(login=trade.owner, currency=trade.sell_currency)
+            owner_balance.balance = str(float(owner_balance.balance) + float(trade.sell_quantity))
             owner_balance.save()
             return True
         except Exception as e:
+            print(e)
             return False
-
 
 
 def send_notification(email: str):

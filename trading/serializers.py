@@ -31,7 +31,6 @@ class UpdateTradeSerializer(serializers.ModelSerializer):
 
         model = Trade
         fields = [
-            'is_active',
             'sell_currency',
             'buy_currency',
             'sell_quantity',
