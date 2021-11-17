@@ -127,14 +127,12 @@ class AcceptTradeView(generics.GenericAPIView):  # Наличка
     queryset = Trade.objects.filter(is_active=True, status='process', type='cash')
 
     def put(self, request, *args, **kwargs):
-        with transaction.atomic():
-            trade = self.get_object()
-            user = EtBalance.objects.get(login=trade.participant, currency=trade.sell_currency)
-            user.balance = str(float(user.balance) + float(trade.sell_quantity))
-            trade.status = 'finished'
-            trade.save()
-            user.save()
-            return Response({'status': 'SUCCESS'}, status=status.HTTP_202_ACCEPTED)
+        trade = self.get_object()
+        if make_transaction(trade):
+            return Response(
+                {'status': 'Trade was completed successfully'},
+                status=status.HTTP_202_ACCEPTED)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class AcceptCardSentPaymentTradeView(generics.RetrieveUpdateAPIView):  # Карта
