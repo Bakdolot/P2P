@@ -22,7 +22,7 @@ from .permissions import IsOwnerOrReadOnly, IsOwner, IsParticipant, IsNotOwner
 class TradeListView(generics.ListAPIView):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = TradeListFilter
-    queryset = Trade.objects.filter(is_active=True, status='expectation')
+    queryset = Trade.objects.filter(status='expectation')
     serializer_class = RetrieveTradeSerializer
 
 
@@ -43,7 +43,7 @@ class TradeCreateView(generics.CreateAPIView):
 
 
 class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Trade.objects.filter(is_active=True, status='expectation')
+    queryset = Trade.objects.filter(status='expectation')
     serializer_class = UpdateTradeSerializer
     permission_classes = [IsOwnerOrReadOnly]
 
@@ -85,7 +85,7 @@ class AcceptCardReceivedPaymentTradeView(generics.GenericAPIView):
     
     def put(self, request, *args, **kwargs):
         trade = self.get_object()
-        make_transaction(trade)
+        make_transaction(trade, request)
         trade.owner_confirm = True
         trade.save()
         return Response(
@@ -94,7 +94,7 @@ class AcceptCardReceivedPaymentTradeView(generics.GenericAPIView):
 
 
 class TradeJoinView(generics.GenericAPIView):
-    queryset = Trade.objects.filter(status='expectation', is_active=True)
+    queryset = Trade.objects.filter(status='expectation')
     permission_classes = [IsNotOwner]
 
     def put(self, request, *args, **kwargs):
@@ -108,25 +108,25 @@ class TradeJoinView(generics.GenericAPIView):
         elif trade.type == 'cript':
             if check_user_balance(login, trade.sell_currency, trade.sell_quantity):
                 trade.participant = login
-                make_transaction(trade)
+                make_transaction(trade, request)
                 return Response({'status': 'SUCCESS TRADE WAS COMPLETED'}, status=status.HTTP_202_ACCEPTED)
         return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
 
 
 class AcceptTradeView(generics.GenericAPIView):  # Наличка
     permission_classes = [IsOwner]
-    queryset = Trade.objects.filter(is_active=True, status='process', type='cash')
+    queryset = Trade.objects.filter(status='process', type='cash')
 
     def put(self, request, *args, **kwargs):
         trade = self.get_object()
-        make_transaction(trade)
+        make_transaction(trade, request)
         return Response(
             {'status': 'Trade was completed successfully'},
             status=status.HTTP_202_ACCEPTED)
 
 
 class AcceptCardSentPaymentTradeView(generics.RetrieveUpdateAPIView):  # Карта
-    queryset = Trade.objects.filter(is_active=True, type='card', participant_sent=False)
+    queryset = Trade.objects.filter(type='card', participant_sent=False)
     serializer_class = AcceptCardPaymentTradeSerializer
     permission_classes = [IsParticipant]
 

@@ -22,6 +22,8 @@ class InternalTransfer(models.Model):
             code='invalid_code')]
             )
     status = models.BooleanField(default=False)
+    owner_operation = models.CharField(max_length=12)
+    recipient_operation = models.CharField(max_length=12)
 
     def save(self, *args, **kwargs):
         if check_user_wallet(self.recipient, self.currency):

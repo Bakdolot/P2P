@@ -19,7 +19,6 @@ class Trade(models.Model):
     )
 
     owner = models.CharField('Email продавца', max_length=150)
-    is_active = models.BooleanField('Активность', default=True)
     sell_currency = models.CharField('Продаваемая крипта', max_length=12)
     buy_currency = models.CharField('Покупаемая крипта', max_length=12)
     sell_quantity = models.CharField('Сумма продаваемой крипты', max_length=32)
@@ -38,6 +37,8 @@ class Trade(models.Model):
     image = models.FileField(blank=True, null=True, upload_to=f'participant_images/')
     owner_confirm = models.BooleanField(default=False, blank=True, null=True)
     participant_sent = models.BooleanField(default=False, blank=True, null=True)
+    owner_operation = models.CharField(max_length=12)
+    participant_operation = models.CharField(max_length=12, blank=True, null=True)
 
     class Meta:
         db_table = 'et_trade'
@@ -240,8 +241,8 @@ class EtOperations(models.Model):
     debit = models.CharField(max_length=32, blank=True, null=True)
     commission = models.CharField(max_length=32, blank=True, null=True)
     rate = models.CharField(max_length=12, blank=True, null=True)
-    date_creation = models.CharField(max_length=32)
-    date_update = models.CharField(max_length=32, blank=True, null=True)
+    date_creation = UnixTimeStampField(auto_now_add=True)
+    date_update = UnixTimeStampField(blank=True, null=True, auto_now=True)
     ip_address = models.CharField(max_length=32)
     memo = models.TextField(blank=True, null=True)
     batch = models.CharField(max_length=120, blank=True, null=True)

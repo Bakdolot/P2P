@@ -12,10 +12,10 @@ class CreateTradeSerializer(serializers.ModelSerializer):
             'participant', 
             'updated_at', 
             'status', 
-            'is_active',
             'owner_confirm',
             'participant_sent',
-            'sell_quantity_with_commission'
+            'sell_quantity_with_commission',
+            'participant_operation'
             ]
 
 
@@ -32,7 +32,6 @@ class UpdateTradeSerializer(serializers.ModelSerializer):
 
         model = Trade
         fields = [
-            'is_active',
             'sell_currency',
             'buy_currency',
             'sell_quantity',
