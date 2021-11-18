@@ -1,8 +1,7 @@
 from rest_framework import authentication
 from rest_framework import exceptions
 
-from .models import EtUsers
-from .trade_services import get_login
+from .models import EtUsers, EtAuthTokens
 
 
 class TradeAuthentication(authentication.BaseAuthentication):
@@ -11,7 +10,7 @@ class TradeAuthentication(authentication.BaseAuthentication):
         if not token:
             return None
         try:
-            login = get_login(token.split(' ')[1])
+            login = EtAuthTokens.objects.get(token=token.split(' ')[1]).login
             user = EtUsers.objects.get(login=login)
         except EtUsers.DoesNotExist:
             raise exceptions.AuthenticationFailed('No such user')

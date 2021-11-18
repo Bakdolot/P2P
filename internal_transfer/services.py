@@ -3,7 +3,7 @@ from django.db import transaction
 from trading.models import EtBalance, EtParameters
 
 
-def check_user_wallet(login, currency):
+def check_user_wallet(login: str, currency: str) -> bool:
     user = EtBalance.objects.filter(login=login, currency=currency)
     return bool(user)
 
@@ -23,7 +23,7 @@ def check_user_balance(user: str, currency: str, sum: str) -> bool:
     return False
 
 
-def balance_transfer(user: str, currency: str, sum: str, is_plus=True):
+def balance_transfer(user: str, currency: str, sum: str, is_plus: bool = True):
     with transaction.atomic():
         user_balance = EtBalance.objects.get(login=user, currency=currency)
         user_balance.balance = str(float(user_balance.balance) + float(sum)) if is_plus else str(float(user_balance.balance) - float(sum))
@@ -40,6 +40,18 @@ def get_data(request) -> dict:
         return data
     data['status'] = False
     return data
+
+
+def transfer_update(request, transfer) -> bool:
+    user_login = transfer.owner
+    currency = request.get('currency')
+    sum = request.get('sum')
+    if not (currency == transfer.currency and sum == transfer.sum):
+        if not check_user_balance(user_login, currency, sum):
+            return False
+        balance_transfer(user_login, transfer.currency, transfer.sum, is_plus=True)
+        balance_transfer(user_login, currency, sum, is_plus=False)
+    return True
 
 
 def transfer_data(transfer) -> bool:

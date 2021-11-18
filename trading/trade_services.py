@@ -1,12 +1,4 @@
-from django.db import transaction
-
-from .models import EtBalance, EtAuthTokens
 from internal_transfer.services import check_user_balance, balance_transfer
-
-
-def get_login(token: str) -> str:
-    user = EtAuthTokens.objects.get(token=token)
-    return user.login
 
 
 def get_create_data(request) -> dict:

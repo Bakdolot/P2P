@@ -7,8 +7,7 @@ from .filters import TradeListFilter
 from .models import Trade
 from .trade_services import (
     get_create_data, make_transaction, 
-    send_notification, get_create_data,
-    trade_update
+    send_notification, trade_update
 )
 from internal_transfer.services import balance_transfer, check_user_balance
 from .serializers import (
@@ -17,7 +16,7 @@ from .serializers import (
     RetrieveTradeSerializer,
     AcceptCardPaymentTradeSerializer
 )
-from .permissions import IsOwnerOrReadOnly, IsOwner, IsParticipant, IsStarted, IsNotOwner
+from .permissions import IsOwnerOrReadOnly, IsOwner, IsParticipant, IsNotOwner
 
 
 class TradeListView(generics.ListAPIView):
@@ -46,7 +45,7 @@ class TradeCreateView(generics.CreateAPIView):
 class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Trade.objects.filter(is_active=True, status='expectation')
     serializer_class = UpdateTradeSerializer
-    permission_classes = [IsOwnerOrReadOnly, IsStarted]
+    permission_classes = [IsOwnerOrReadOnly]
 
     def get_serializer_class(self):
         if self.request.method == 'GET':

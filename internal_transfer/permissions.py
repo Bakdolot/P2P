@@ -9,11 +9,11 @@ class IsOwnerOrRecipient(permissions.BasePermission):
             if login == obj.recipient:
                 return request.method in permissions.SAFE_METHODS
             return obj.owner == login
-        except Exception as e:
+        except AttributeError:
             return False
 
 
-class IsNotOwner(permissions.BasePermission):
+class IsRecipient(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
-        login = request.data.get('recipient')
-        return login != obj.owner
+        login = request.user.login
+        return login == obj.recipient
