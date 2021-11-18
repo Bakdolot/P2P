@@ -36,17 +36,18 @@ def trade_update(request, trade) -> bool:
 
 
 def make_transaction(trade, request):
-    ip = get_client_ip(request)
+    ip_recipient = get_client_ip(request)
     if trade.type == 'cript':
         balance_transfer(trade.owner, trade.buy_currency, trade.buy_quantity, is_plus=True)
         balance_transfer(trade.participant, trade.sell_currency, trade.sell_quantity, is_plus=False)
         balance_transfer(trade.participant, trade.sell_currency, trade.sell_quantity_with_commission, is_plus=True)
 
-        create_operation('exchange', trade.owner, 'otc', trade.buy_currency, trade.buy_quantity, ip)
-        operation = create_operation('exchange', trade.participant, 'otc', trade.sell_currency, trade.sell_quantity_with_commission, ip, commission=get_commission('otc'))
+        ip_ownner = EtOperations.objects.get(operation_id=trade.owner_operation).ip_address
+        create_operation('exchange', trade.owner, 'otc', trade.buy_currency, trade.buy_quantity, ip_ownner)
+        operation = create_operation('exchange', trade.participant, 'otc', trade.sell_currency, trade.sell_quantity_with_commission, ip_recipient, commission=get_commission('otc'))
     elif trade.type == 'cash' or trade.type == 'card':
         balance_transfer(trade.participant, trade.sell_currency, trade.sell_quantity_with_commission, is_plus=True)
-        operation = create_operation('exchange', trade.participant, 'otc', trade.sell_currency, trade.sell_quantity_with_commission, ip, commission=get_commission('otc'))
+        operation = create_operation('exchange', trade.participant, 'otc', trade.sell_currency, trade.sell_quantity_with_commission, ip_recipient, commission=get_commission('otc'))
     trade.status = 'finished'
     trade.participant_operation = operation
     trade.save()

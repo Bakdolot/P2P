@@ -37,8 +37,8 @@ class Trade(models.Model):
     image = models.FileField(blank=True, null=True, upload_to=f'participant_images/')
     owner_confirm = models.BooleanField(default=False, blank=True, null=True)
     participant_sent = models.BooleanField(default=False, blank=True, null=True)
-    owner_operation = models.CharField(max_length=12)
-    participant_operation = models.CharField(max_length=12, blank=True, null=True)
+    owner_operation = models.SmallIntegerField()
+    participant_operation = models.SmallIntegerField(blank=True, null=True)
 
     class Meta:
         db_table = 'et_trade'
