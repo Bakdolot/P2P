@@ -63,7 +63,12 @@ class GetTransferView(generics.RetrieveUpdateDestroyAPIView):
     def put(self, request, *args, **kwargs):
         transfer = self.get_object()
         if transfer_update(request, transfer):
-            return super().put(request, *args, **kwargs)IsOwnerOrRecipient
+            return super().put(request, *args, **kwargs)
+        return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
+    
+    def patch(self, request, *args, **kwargs):
+        transfer = self.get_object()
+        if transfer_update(request, transfer):
             return super().patch(request, *args, **kwargs)
         return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
 
