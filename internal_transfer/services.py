@@ -114,7 +114,7 @@ def transfer_update(request, transfer) -> bool:
     return True
 
 
-def transfer_data(transfer, request) -> bool:
+def transfer_data(transfer) -> bool:
     if check_user_wallet(transfer.recipient, transfer.currency):
         ip = EtOperations.objects.get(operation_id=transfer.owner).ip_address
         balance_transfer(transfer.recipient, transfer.currency, transfer.sum_with_commission, is_plus=True)
