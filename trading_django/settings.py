@@ -27,7 +27,8 @@ INSTALLED_APPS = [
     'drf_yasg',
 
     'trading',
-    'internal_transfer'
+    'internal_transfer',
+    'Pay24'
 ]
 
 MIDDLEWARE = [

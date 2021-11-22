@@ -32,7 +32,7 @@ class Pay24Operation(models.Model):
     guid = models.CharField(max_length=120, blank=True, null=True)
     ip_address = models.CharField(max_length=32)
     date_creation = models.CharField(max_length=32, default=datetime.now().timestamp(), blank=True, null=True)
-    date_update = models.CharField(max_length=32, auto_now=True, blank=True, null=True)
+    date_update = models.CharField(max_length=32, blank=True, null=True)
     commission = models.CharField(max_length=12, blank=True, null=True)
 
     def save(self, *args, **kwargs):
