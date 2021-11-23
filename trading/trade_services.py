@@ -1,6 +1,6 @@
 from django.db import transaction
 
-from .models import EtBalance, EtAuthTokens, EtCurrency, EtParameters
+from .models import EtBalance, EtAuthTokens, EtCurrency, EtParameters, EtOperations
 from .utils import get_commission
 
 
@@ -90,5 +90,11 @@ def delete_trade(trade):
 
 def send_notification(email: str):
     pass
+
+
+def add_to_operations(trade):
+                             operation = EtOperations.objects.create(
+
+    )
 
 
