@@ -4,6 +4,5 @@ python-dotenv
 psycopg2-binary
 django-filter
 drf-yasg
-django-unixtimestampfield
 mysqlclient
 Pillow
