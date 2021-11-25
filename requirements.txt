@@ -6,3 +6,4 @@ django-filter
 drf-yasg
 mysqlclient
 Pillow
+gunicorn
