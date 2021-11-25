@@ -84,7 +84,7 @@ def balance_transfer(user: str, currency: str, sum: str, is_plus: bool = True):
 
 
 def get_data(request) -> dict:
-    data = request.data
+    data = request.data.copy()
     user = request.user.login
     ip = get_client_ip(request)
     if check_user_balance(user, data.get('currency'), data.get('sum')):

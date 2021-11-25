@@ -6,7 +6,7 @@ from .services import check_user_wallet, get_sum_with_commission
 
 
 class InternalTransfer(models.Model):
-    owner = models.CharField(max_length=64)
+    owner = models.CharField(max_length=64, blank=True, null=True)
     currency = models.CharField(max_length=12)
     sum = models.CharField(max_length=32)
     sum_with_commission = models.CharField(max_length=32)
@@ -22,7 +22,7 @@ class InternalTransfer(models.Model):
             code='invalid_code')]
             )
     status = models.BooleanField(default=False)
-    owner_operation = models.CharField(max_length=12)
+    owner_operation = models.CharField(max_length=12, blank=True, null=True)
     recipient_operation = models.CharField(max_length=12)
 
     class Meta:
