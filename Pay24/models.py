@@ -30,7 +30,7 @@ class Service(models.Model):
 class Pay24Operation(models.Model):
     category = models.IntegerField()
     service = models.IntegerField()
-    login = models.CharField(max_length=64)
+    owner = models.CharField(max_length=64)
     operation_type = models.SmallIntegerField()
     sum = models.CharField(max_length=32)
     sum_with_commission = models.CharField(max_length=32)
