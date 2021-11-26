@@ -23,7 +23,7 @@ class Trade(models.Model):
     sell_quantity = models.CharField('Сумма продаваемой крипты', max_length=32)
     sell_quantity_with_commission = models.CharField('Сумма продажи с учетом комиссии', max_length=12)
     buy_quantity = models.CharField('Сумма покупаемой крипты', max_length=32)
-    create_at = models.CharField(max_length=64, default=datetime.now().timestamp(), blank=True, null=True)
+    create_at = models.CharField(max_length=64, default=int(int(datetime.now().timestamp())), blank=True, null=True)
     updated_at = models.CharField(max_length=64, blank=True, null=True)
     participant = models.CharField('Email покупателя', blank=True, max_length=150, null=True)
     status = models.CharField('Статус сделки', max_length=30, choices=STATUS_CHOICES, default='expectation')
@@ -43,7 +43,7 @@ class Trade(models.Model):
         db_table = 'et_trade'
 
     def save(self, *args, **kwargs):
-        self.updated_at = datetime.now().timestamp()
+        self.updated_at = int(datetime.now().timestamp())
         super().save(*args, **kwargs)
 
 
@@ -87,7 +87,7 @@ class EtOperations(models.Model):
     debit = models.CharField(max_length=32, blank=True, null=True)
     commission = models.CharField(max_length=32, blank=True, null=True)
     rate = models.CharField(max_length=12, blank=True, null=True)
-    date_creation = models.CharField(max_length=64, default=datetime.now().timestamp(), blank=True, null=True)
+    date_creation = models.CharField(max_length=64, default=int(datetime.now().timestamp()), blank=True, null=True)
     date_update = models.CharField(max_length=64, null=True)
     ip_address = models.CharField(max_length=32)
     memo = models.TextField(blank=True, null=True)
@@ -99,7 +99,7 @@ class EtOperations(models.Model):
         db_table = 'et_operations'
     
     def save(self, *args, **kwargs):
-        self.date_update = datetime.now().timestamp()
+        self.date_update = int(datetime.now().timestamp())
         super().save(*args, **kwargs)
 
 

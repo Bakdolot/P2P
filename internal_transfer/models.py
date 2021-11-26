@@ -11,7 +11,7 @@ class InternalTransfer(models.Model):
     sum = models.CharField(max_length=32)
     sum_with_commission = models.CharField(max_length=32)
     recipient = models.CharField(max_length=64)
-    create_at = models.CharField(default=datetime.now().timestamp(), max_length=64, blank=True, null=True)
+    create_at = models.CharField(default=int(datetime.now().timestamp()), max_length=64, blank=True, null=True)
     security_code = models.CharField(
         max_length=10, 
         blank=True, 
