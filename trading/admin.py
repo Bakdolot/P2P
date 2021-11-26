@@ -6,10 +6,10 @@ from .models import Trade, EtBalance, EtAuthTokens, EtParameters
 
 @admin.register(Trade)
 class TradeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'type', 'owner', 'is_active', 'sell_currency', 'buy_currency', 'sell_quantity',
+    list_display = ('id', 'type', 'owner', 'sell_currency', 'buy_currency', 'sell_quantity',
                     'buy_quantity', 'create_at', 'updated_at', 'participant')
     list_display_links = list_display
-    list_filter = ['is_active', 'create_at', 'type', 'status']
+    list_filter = ['create_at', 'type', 'status']
 
 
 @admin.register(EtBalance)

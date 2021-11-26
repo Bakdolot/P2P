@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<request>
+    <auth login="login" sign="password" signAlg="MD5"/>
+    <providers>
+        <addOfflinePayment>
+            <payment id="123456" >
+                <to service="881" account="9161234567" amount =”95”
+                currency=”417” commission=”5” passport=”№ паспорта” payer_info=”ФИО”
+                obl_code="01" obl_text="г. Бишкек" res_code="22" res_text="Ленинский район"
+                uchastok_code="2" uchastok_text="Ленинский участок" id_from_provider=”123”/>
+            </payment>
+        </addOfflinePayment>
+    </providers>
+</request>

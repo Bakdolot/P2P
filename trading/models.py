@@ -1,6 +1,5 @@
+from datetime import datetime
 from django.db import models
-
-from unixtimestampfield.fields import UnixTimeStampField
 
 
 class Trade(models.Model):
@@ -19,14 +18,13 @@ class Trade(models.Model):
     )
 
     owner = models.CharField('Email продавца', max_length=150)
-    is_active = models.BooleanField('Активность', default=True)
     sell_currency = models.CharField('Продаваемая крипта', max_length=12)
     buy_currency = models.CharField('Покупаемая крипта', max_length=12)
     sell_quantity = models.CharField('Сумма продаваемой крипты', max_length=32)
     sell_quantity_with_commission = models.CharField('Сумма продажи с учетом комиссии', max_length=12)
     buy_quantity = models.CharField('Сумма покупаемой крипты', max_length=32)
-    create_at = UnixTimeStampField(auto_now_add=True)
-    updated_at = UnixTimeStampField(auto_now=True)
+    create_at = models.CharField(max_length=64, default=datetime.now().timestamp(), blank=True, null=True)
+    updated_at = models.CharField(max_length=64, blank=True, null=True)
     participant = models.CharField('Email покупателя', blank=True, max_length=150, null=True)
     status = models.CharField('Статус сделки', max_length=30, choices=STATUS_CHOICES, default='expectation')
     type = models.CharField('Тип сделки', max_length=10, choices=TYPE_CHOICES)
@@ -38,9 +36,15 @@ class Trade(models.Model):
     image = models.FileField(blank=True, null=True, upload_to=f'participant_images/')
     owner_confirm = models.BooleanField(default=False, blank=True, null=True)
     participant_sent = models.BooleanField(default=False, blank=True, null=True)
+    owner_operation = models.SmallIntegerField()
+    participant_operation = models.SmallIntegerField(blank=True, null=True)
 
     class Meta:
         db_table = 'et_trade'
+
+    def save(self, *args, **kwargs):
+        self.updated_at = datetime.now().timestamp()
+        super().save(*args, **kwargs)
 
 
 class EtActivations(models.Model):
@@ -240,8 +244,8 @@ class EtOperations(models.Model):
     debit = models.CharField(max_length=32, blank=True, null=True)
     commission = models.CharField(max_length=32, blank=True, null=True)
     rate = models.CharField(max_length=12, blank=True, null=True)
-    date_creation = models.CharField(max_length=32)
-    date_update = models.CharField(max_length=32, blank=True, null=True)
+    date_creation = models.CharField(max_length=64, default=datetime.now().timestamp(), blank=True, null=True)
+    date_update = models.CharField(max_length=64, null=True)
     ip_address = models.CharField(max_length=32)
     memo = models.TextField(blank=True, null=True)
     batch = models.CharField(max_length=120, blank=True, null=True)
@@ -250,6 +254,10 @@ class EtOperations(models.Model):
     class Meta:
         managed = False
         db_table = 'et_operations'
+    
+    def save(self, *args, **kwargs):
+        self.date_update = datetime.now().timestamp()
+        super().save(*args, **kwargs)
 
 
 class EtPages(models.Model):

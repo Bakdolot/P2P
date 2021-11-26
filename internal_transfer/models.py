@@ -1,8 +1,8 @@
 from django.db import models
 from django.core.validators import RegexValidator
-from unixtimestampfield.fields import UnixTimeStampField
+from datetime import datetime
 from django.http import Http404
-from .services import check_recipient, get_sum_with_commission
+from .services import check_user_wallet, get_sum_with_commission
 
 
 class InternalTransfer(models.Model):
@@ -11,7 +11,7 @@ class InternalTransfer(models.Model):
     sum = models.CharField(max_length=32)
     sum_with_commission = models.CharField(max_length=32)
     recipient = models.CharField(max_length=64)
-    create_at = UnixTimeStampField(auto_now_add=True)
+    create_at = models.CharField(default=datetime.now().timestamp(), max_length=64, blank=True, null=True)
     security_code = models.CharField(
         max_length=10, 
         blank=True, 
@@ -22,10 +22,15 @@ class InternalTransfer(models.Model):
             code='invalid_code')]
             )
     status = models.BooleanField(default=False)
+    owner_operation = models.CharField(max_length=12)
+    recipient_operation = models.CharField(max_length=12)
+
+    class Meta:
+        db_table = 'et_internal_transfer'
 
     def save(self, *args, **kwargs):
-        if check_recipient(self.recipient, self.currency):
-            self.sum_with_commission = get_sum_with_commission(self.sum)
+        if check_user_wallet(self.recipient, self.currency):
+            self.sum_with_commission = get_sum_with_commission(self.sum, 'internal_transfer')
             super().save(*args, **kwargs)
         else:
             raise Http404

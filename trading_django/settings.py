@@ -27,7 +27,8 @@ INSTALLED_APPS = [
     'drf_yasg',
 
     'trading',
-    'internal_transfer'
+    'internal_transfer',
+    'Pay24'
 ]
 
 MIDDLEWARE = [
@@ -116,3 +117,17 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# CELERY
+REDIS_URL = 'redis://127.0.0.1'
+REDIS_PORT = '6379'
+
+CELERY_BROKER_URL = REDIS_URL
+CELERY_BACKEND_URL = REDIS_URL
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_TIME_ZONE = TIME_ZONE
+
+BROKER_URL = REDIS_URL
+BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}

@@ -2,14 +2,12 @@ from rest_framework import generics
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework import mixins
 from django.http import Http404
 
 from .models import InternalTransfer
-from .services import get_data, transfer_data, check_recipient
+from .services import get_data, transfer_data, check_user_wallet, transfer_update, balance_transfer
 from .serializers import CreateTransferSerializer, GetTransferSerializer, UpdateTransferSerializer
-from trading.permissions import IsNotOwner
-from .permissions import IsOwnerOrRecipient, IsNotOwner
+from .permissions import IsOwnerOrRecipient, IsRecipient
 
 
 class CreateTransferView(generics.CreateAPIView):
@@ -18,7 +16,7 @@ class CreateTransferView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         data = request.data
-        if not check_recipient(data.get('recipient'), data.get('currency')):
+        if not check_user_wallet(data.get('recipient'), data.get('currency')):
             return Response({'message': 'Recipient with this login does not exist'}, status=status.HTTP_400_BAD_REQUEST)
         data = get_data(request)
         if data['status']:
@@ -45,7 +43,7 @@ class GetTransferListView(generics.ListAPIView):
 class GetTransferView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = GetTransferSerializer
     queryset = InternalTransfer.objects.all()
-    permission_classes = [IsNotOwner, IsOwnerOrRecipient]
+    permission_classes = [IsOwnerOrRecipient]
 
     def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:
@@ -57,10 +55,27 @@ class GetTransferView(generics.RetrieveUpdateDestroyAPIView):
             return super().get_queryset()
         return InternalTransfer.objects.filter(status=False)
 
+    def delete(self, request, *args, **kwargs):
+        transfer = self.get_object()
+        balance_transfer(transfer.owner, transfer.currency, transfer.sum, is_plus=True)
+        return super().delete(request, *args, **kwargs)
+    
+    def put(self, request, *args, **kwargs):
+        transfer = self.get_object()
+        if transfer_update(request.data, transfer):
+            return super().put(request, *args, **kwargs)
+        return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
+    
+    def patch(self, request, *args, **kwargs):
+        transfer = self.get_object()
+        if transfer_update(request.data, transfer):
+            return super().patch(request, *args, **kwargs)
+        return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
+
 
 class AcceptTransferView(generics.GenericAPIView):
     queryset = InternalTransfer.objects.filter(status=False)
-    permission_classes = [IsNotOwner]
+    permission_classes = [IsRecipient]
 
     def post(self, request, *args, **kwargs):
         transfer = self.get_object()

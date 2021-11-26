@@ -1,100 +1,56 @@
-from django.db import transaction
-
-from .models import EtBalance, EtAuthTokens, EtCurrency, EtParameters, EtOperations
-from .utils import get_commission
+from internal_transfer.services import check_user_balance, balance_transfer, get_client_ip, get_commission, create_operation
+from .models import EtOperations
 
 
-def get_login(token: str) -> str:
-    user = EtAuthTokens.objects.get(token=token)
-    return user.login
+def get_create_data(request) -> dict:
+    data = request.data.copy()
+    login = request.user.login
+    currency = data.get('sell_currency')
+    sum = data.get('sell_quantity')
+    ip = get_client_ip(request)
+    if check_user_balance(login, currency, sum):
+        balance_transfer(login, currency, sum, is_plus=False)
+        operation_id = create_operation('block', login, 'otc', currency, sum, ip)
+        data['owner'] = login
+        data['data_status'] = True
+        data['owner_operation'] = operation_id
+        return data
+    data['data_status'] = False
+    return data
 
 
-def get_commission_value():
-    return EtParameters.objects.get(categories='otc', alias='commission').value
-
-
-def checking_and_debiting_balance(login: str, quantity: str, currency: int) -> bool:
-    """ Проверка баланса, если на балансе достаточно средств - они
-        списываются со счета, в противном случае сделка не может быть создана
-    """
-    try:
-        with transaction.atomic():
-            balance = EtBalance.objects.get(login=login, currency=currency)
-
-            if float(balance.balance) >= float(quantity):
-                balance.balance = str(float(balance.balance) - float(quantity))
-                balance.save(update_fields=['balance'])
-                return True
-    except Exception as e:
-        print(e)
-        return False
-
-    return False
-
-
-def make_transaction(trade) -> bool:
-    try:
-        with transaction.atomic():
-
-            if trade.type == 'cript':  # Крипта
-                owner = EtBalance.objects.get(login=trade.owner, currency=trade.buy_currency)
-                participant = EtBalance.objects.get(login=trade.participant, currency=trade.sell_currency)
-
-                owner.balance = str(float(owner.balance) + float(trade.buy_quantity))
-                participant.balance = str(float(participant.balance) + float(trade.sell_quantity_with_commission))
-
-                owner.save()
-                participant.save()
-
-                trade.status = 'finished'
-                trade.is_active = False
-                trade.save()
-                return True
-
-            elif trade.type == 'card':  # Карта
-
-                participant = EtBalance.objects.get(login=trade.participant, currency=trade.sell_currency)
-
-                participant.balance = str(float(participant.balance) + float(trade.sell_quantity))
-                participant.save()
-
-                trade.status = 'finished'
-                trade.save()
-                return True
-            
-            elif trade.type == 'cash':
-                user = EtBalance.objects.get(login=trade.participant, currency=trade.sell_currency)
-
-                user.balance = str(float(user.balance) + float(trade.sell_quantity))
-                trade.status = 'finished'
-                
-                trade.save()
-                user.save()
-
-    except Exception as e:
-        print(e)
-        return False
-
-
-def delete_trade(trade):
-    with transaction.atomic():
-        try:
-            owner_balance = EtBalance.objects.get(login=trade.owner, currency=trade.sell_currency)
-            owner_balance.balance = str(float(owner_balance.balance) + float(trade.sell_quantity))
-            owner_balance.save()
-            return True
-        except Exception as e:
-            print(e)
+def trade_update(request, trade) -> bool:
+    user_login = trade.owner
+    currency = request.get('sell_currency')
+    sum = request.get('sell_quantity')
+    if not (currency == trade.sell_currency and sum == trade.sell_quantity):
+        if not check_user_balance(user_login, currency, sum):
             return False
+        balance_transfer(user_login, trade.sell_currency, trade.sell_quantity, is_plus=True)
+        balance_transfer(user_login, currency, sum, is_plus=False)
+        operation = EtOperations.objects.get(id=trade.owner_operation)
+        operation.currency = currency
+        operation.sum = sum
+        operation.save()
+    return True
 
+
+def make_transaction(trade, request):
+    ip_recipient = get_client_ip(request)
+    if trade.type == 'cript':
+        balance_transfer(trade.owner, trade.buy_currency, trade.buy_quantity, is_plus=True)
+        balance_transfer(trade.participant, trade.sell_currency, trade.sell_quantity, is_plus=False)
+        balance_transfer(trade.participant, trade.sell_currency, trade.sell_quantity_with_commission, is_plus=True)
+
+        ip_ownner = EtOperations.objects.get(operation_id=trade.owner_operation).ip_address
+        create_operation('exchange', trade.owner, 'otc', trade.buy_currency, trade.buy_quantity, ip_ownner)
+        operation = create_operation('exchange', trade.participant, 'otc', trade.sell_currency, trade.sell_quantity_with_commission, ip_recipient, commission=get_commission('otc'))
+    elif trade.type == 'cash' or trade.type == 'card':
+        balance_transfer(trade.participant, trade.sell_currency, trade.sell_quantity_with_commission, is_plus=True)
+        operation = create_operation('exchange', trade.participant, 'otc', trade.sell_currency, trade.sell_quantity_with_commission, ip_recipient, commission=get_commission('otc'))
+    trade.status = 'finished'
+    trade.participant_operation = operation
+    trade.save()
 
 def send_notification(email: str):
     pass
-
-
-def add_to_operations(trade):
-                             operation = EtOperations.objects.create(
-
-    )
-
-

@@ -1,4 +1,3 @@
-from django.http import HttpResponseBadRequest
 from rest_framework import serializers
 from django.core.validators import RegexValidator
 
@@ -10,7 +9,7 @@ class CreateTransferSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InternalTransfer
-        fields = ['owner', 'currency', 'sum', 'recipient', 'security_code']
+        fields = ['id', 'owner', 'currency', 'sum', 'recipient', 'security_code', 'owner_operation']
 
 
 class GetTransferSerializer(serializers.ModelSerializer):

@@ -12,9 +12,10 @@ class CreateTradeSerializer(serializers.ModelSerializer):
             'participant', 
             'updated_at', 
             'status', 
-            'is_active',
             'owner_confirm',
-            'participant_sent'
+            'participant_sent',
+            'sell_quantity_with_commission',
+            'participant_operation'
             ]
 
 
@@ -48,5 +49,3 @@ class AcceptCardPaymentTradeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Trade
         fields = ['image']
-
-

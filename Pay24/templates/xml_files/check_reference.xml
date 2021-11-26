@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<request>
+    <auth login="login" sign="password" signAlg="MD5"/>
+    <providers>
+        <checkPaymentRequisites>
+            <payment id="123456" >
+                <to service="881" account="1234" amount=”10” obl_code="01"
+                obl_text="г. Бишкек" res_code="22" res_text="Ленинский район" uchastok_code="2"
+                uchastok_text="Ленинский участок"/>
+            </payment>
+        </checkPaymentRequisites>
+    </providers>
+</request>

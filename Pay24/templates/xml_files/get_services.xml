@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<request>
+    <auth login="login" sign="password" signAlg="MD5"/>
+    <providers>
+        <getUIProviders/>
+    </providers>
+</request>

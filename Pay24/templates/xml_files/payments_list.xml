@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<request>
+    <auth login="login" sign="password" signAlg="MD5"/>
+    <reports>
+        <getPayments>
+            <date-from>2019-05-01T10:00:00</date-from>
+            <date-to>2019-05-05T10:05:00</date-to>
+        </getPayments>
+    </reports>
+</request>
