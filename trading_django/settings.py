@@ -46,11 +46,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'trading_django.urls'
 
-CORS_ALLOWED_ORIGINS = [
-    "http://78.141.222.125",
-    "http://127.0.0.1",
-    'http://0.0.0.0'
-]
+CORS_ORIGIN_ALLOW_ALL = True
 
 TEMPLATES = [
     {
