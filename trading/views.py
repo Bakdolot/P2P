@@ -39,7 +39,7 @@ class TradeCreateView(generics.CreateAPIView):
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-        return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
+        return Response({'message': 'Не хватает баланса'}, status=status.HTTP_402_PAYMENT_REQUIRED)
 
 
 class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
@@ -70,13 +70,13 @@ class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
         trade = self.get_object()
         if trade_update(request, trade):
             return super().put(request, *args, **kwargs)
-        return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
+        return Response({'message': 'Не хватает баланса'}, status=status.HTTP_402_PAYMENT_REQUIRED)
     
     def patch(self, request, *args, **kwargs):
         trade = self.get_object()
         if trade_update(request, trade):
             return super().patch(request, *args, **kwargs)
-        return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
+        return Response({'message': 'Не хватает баланса'}, status=status.HTTP_402_PAYMENT_REQUIRED)
 
 
 class AcceptCardReceivedPaymentTradeView(generics.GenericAPIView):
@@ -110,7 +110,7 @@ class TradeJoinView(generics.GenericAPIView):
                 trade.participant = login
                 make_transaction(trade, request)
                 return Response({'status': 'SUCCESS TRADE WAS COMPLETED'}, status=status.HTTP_202_ACCEPTED)
-        return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
+        return Response({'message': 'Не хватает баланса'}, status=status.HTTP_402_PAYMENT_REQUIRED)
 
 
 class AcceptTradeView(generics.GenericAPIView):  # Наличка

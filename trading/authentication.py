@@ -14,11 +14,11 @@ class TradeAuthentication(authentication.BaseAuthentication):
             token_obj = EtAuthTokens.objects.get(token=token.split(' ')[1])
             token_exp = datetime.fromtimestamp(int(token_obj.date_expiration))
             if datetime.now() > token_exp:
-                raise exceptions.AuthenticationFailed('The lifetime of this token has expired')
+                raise exceptions.AuthenticationFailed('Срок действия данного токена истек')
             user = EtUsers.objects.get(login=token_obj.login)
         except EtUsers.DoesNotExist:
-            raise exceptions.AuthenticationFailed('No such user')
+            raise exceptions.AuthenticationFailed('Пользователь не найден')
         except EtAuthTokens.DoesNotExist:
-            raise exceptions.AuthenticationFailed('Incorrect authentication token')
+            raise exceptions.AuthenticationFailed('Данный токен не найден')
 
         return (user, None)

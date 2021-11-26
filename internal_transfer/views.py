@@ -17,7 +17,7 @@ class CreateTransferView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         data = request.data
         if not check_user_wallet(data.get('recipient'), data.get('currency')):
-            return Response({'message': 'Recipient with this login does not exist'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': 'У этого пользователя нет такого кошелька'}, status=status.HTTP_400_BAD_REQUEST)
         data = get_data(request)
         if data['status']:
             serializer = self.get_serializer(data=data)
@@ -25,7 +25,7 @@ class CreateTransferView(generics.CreateAPIView):
             self.perform_create(serializer)
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-        return Response({'message': 'Not enough money'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': 'Не достаточно средств'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GetTransferListView(generics.ListAPIView):
@@ -64,13 +64,13 @@ class GetTransferView(generics.RetrieveUpdateDestroyAPIView):
         transfer = self.get_object()
         if transfer_update(request.data, transfer):
             return super().put(request, *args, **kwargs)
-        return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
+        return Response({'message': 'Не достаточно средств'}, status=status.HTTP_402_PAYMENT_REQUIRED)
     
     def patch(self, request, *args, **kwargs):
         transfer = self.get_object()
         if transfer_update(request.data, transfer):
             return super().patch(request, *args, **kwargs)
-        return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
+        return Response({'message': 'Не достаточно средств'}, status=status.HTTP_402_PAYMENT_REQUIRED)
 
 
 class AcceptTransferView(generics.GenericAPIView):
