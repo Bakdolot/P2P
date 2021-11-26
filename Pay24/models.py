@@ -30,19 +30,19 @@ class Service(models.Model):
 class Pay24Operation(models.Model):
     category = models.IntegerField()
     service = models.IntegerField()
-    login = models.CharField(max_length=64)
+    owner = models.CharField(max_length=64)
     operation_type = models.SmallIntegerField()
     sum = models.CharField(max_length=32)
     sum_with_commission = models.CharField(max_length=32)
     currency = models.CharField(max_length=12)
     guid = models.CharField(max_length=120, blank=True, null=True)
     ip_address = models.CharField(max_length=32)
-    date_creation = models.CharField(max_length=32, default=datetime.now().timestamp(), blank=True, null=True)
+    date_creation = models.CharField(max_length=32, default=int(datetime.now().timestamp()), blank=True, null=True)
     date_update = models.CharField(max_length=32, blank=True, null=True)
     reference = models.IntegerField()
 
     def save(self, *args, **kwargs):
-        self.date_update = datetime.now().timestamp()
+        self.date_update = int(datetime.now().timestamp())
         super().save(*args, **kwargs)
 
     class Meta:

@@ -11,7 +11,7 @@ class CategoryListSerializer(serializers.ModelSerializer):
 
 class ServiceListSerializer(serializers.ModelSerializer):
 
-    class Meat:
+    class Meta:
         model = Service
         fields = '__all__'
 
@@ -30,6 +30,7 @@ class CreatePaymentSerializer(serializers.ModelSerializer):
 class PaymentRetrieveSerializer(serializers.ModelSerializer):
 
     class Meta:
+        model = Pay24Operation
         exclude = [
             'operation_type',
             'ip_address',
