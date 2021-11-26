@@ -7,3 +7,4 @@ drf-yasg
 mysqlclient
 Pillow
 gunicorn
+django-cors-headers
