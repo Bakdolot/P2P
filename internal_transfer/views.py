@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.http import Http404
 
+from trading.utils import convert_unixtime_to_datetime
 from .models import InternalTransfer
 from .services import get_data, transfer_data, check_user_wallet, transfer_update, balance_transfer
 from .serializers import CreateTransferSerializer, GetTransferSerializer, UpdateTransferSerializer
@@ -35,6 +36,8 @@ class GetTransferListView(generics.ListAPIView):
         try:
             login = self.request.user.login
             queryset = InternalTransfer.objects.filter(owner=login).union(InternalTransfer.objects.filter(recipient=login))
+            for i in range(len(queryset)):
+                queryset[i].create_at = convert_unixtime_to_datetime(queryset[i].create_at)
             return queryset
         except AttributeError:
             raise Http404
@@ -54,6 +57,12 @@ class GetTransferView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method in SAFE_METHODS:
             return super().get_queryset()
         return InternalTransfer.objects.filter(status=False)
+
+    def get_object(self):
+        object = super().get_object()
+        if self.request.method in SAFE_METHODS:
+            object.create_at = convert_unixtime_to_datetime(object.create_at)
+        return object
         
     def delete(self, request, *args, **kwargs):
         transfer = self.get_object()
