@@ -6,5 +6,6 @@ urlpatterns = [
     path('category/list/', CategoryListView.as_view()),
     path('service/list/', ServiceListView.as_view()),
     path('create/', CreatePaymentView.as_view()),
-    path('get/<str:guid>/', RetrievePaymentView.as_view())
+    path('get/list/', ListPaymentview.as_view()),
+    path('get/<str:guid>/', RetrievePaymentView.as_view()),
 ]

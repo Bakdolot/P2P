@@ -11,4 +11,4 @@ pre_save.connect(my_callback, sender=Trade)
 
 
 def convert_unixtime_to_datetime(unixtime: str) -> str:
-    return datetime.utcfromtimestamp(float(unixtime)).strftime('%Y-%m-%d %H:%M:%S')
+    return datetime.utcfromtimestamp(float(unixtime)).strftime('%Y/%m/%d %H:%M')

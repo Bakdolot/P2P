@@ -1,5 +1,6 @@
 from django.db import models
 from datetime import datetime
+import uuid
 
 
 class Category(models.Model):
@@ -35,7 +36,7 @@ class Pay24Operation(models.Model):
     sum = models.CharField(max_length=32)
     sum_with_commission = models.CharField(max_length=32)
     currency = models.CharField(max_length=12)
-    guid = models.CharField(max_length=120, blank=True, null=True)
+    guid = models.CharField(max_length=120, default=uuid.uuid4(), blank=True, null=True)
     ip_address = models.CharField(max_length=32)
     date_creation = models.CharField(max_length=32, default=int(datetime.now().timestamp()), blank=True, null=True)
     date_update = models.CharField(max_length=32, blank=True, null=True)

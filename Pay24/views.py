@@ -3,6 +3,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from .serializers import *
 from .models import *
+from trading.permissions import IsOwner
 
 
 class CategoryListView(generics.ListAPIView):
@@ -26,3 +27,9 @@ class RetrievePaymentView(generics.RetrieveAPIView):
     lookup_field = 'guid'
     queryset = Pay24Operation.objects.all()
     serializer_class = PaymentRetrieveSerializer
+
+
+class ListPaymentview(generics.ListAPIView):
+    serializer_class = PaymentRetrieveSerializer
+    queryset = Pay24Operation.objects.all()
+    permission_classes = [IsOwner]
