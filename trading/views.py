@@ -1,4 +1,5 @@
 from rest_framework import generics
+from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework import status
 from django_filters import rest_framework as filters
@@ -63,7 +64,9 @@ class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         trade = generics.get_object_or_404(Trade, id=self.kwargs.get('pk'))
         try:
-            if self.request.user.login == trade.owner: 
+            if self.request in SAFE_METHODS and \
+            self.request.user.login == trade.participant or \
+            self.request.user.login == trade.owner:
                 return Trade.objects.all()
         except AttributeError:
             None
