@@ -1,5 +1,10 @@
 from internal_transfer.services import check_user_balance, balance_transfer, get_client_ip, get_commission, create_operation
-from .models import EtOperations
+from .models import EtOperations, EtFinances
+from .utils import get_correct_sum
+
+
+def get_step_size(currency):
+    return EtFinances.objects.get(currency=currency).step_size
 
 
 def get_create_data(request) -> dict:
@@ -71,7 +76,7 @@ def make_transaction(trade, request):
     trade.status = 'finished'
     trade.participant_operation = operation
     trade.save()
-    
+
 
 def send_notification(email: str):
     pass

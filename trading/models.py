@@ -132,3 +132,29 @@ class EtUsers(models.Model):
     class Meta:
         managed = False
         db_table = 'et_users'
+
+
+class EtFinances(models.Model):
+    finance_id = models.AutoField(primary_key=True)
+    finance_type = models.SmallIntegerField(blank=True, null=True)
+    direction = models.SmallIntegerField(blank=True, null=True)
+    name = models.CharField(max_length=280)
+    alias = models.CharField(max_length=280)
+    logo = models.CharField(max_length=16, blank=True, null=True)
+    currency = models.CharField(max_length=32)
+    date_creation = models.CharField(max_length=32)
+    date_update = models.CharField(max_length=32)
+    balance = models.CharField(max_length=32, blank=True, null=True)
+    min_qty = models.CharField(max_length=32)
+    max_qty = models.CharField(max_length=32)
+    step_size = models.CharField(max_length=32)
+    commission = models.CharField(max_length=12, blank=True, null=True)
+    addination_fees = models.CharField(max_length=12, blank=True, null=True)
+    cashout_fees = models.CharField(max_length=12, blank=True, null=True)
+    cashout_status = models.SmallIntegerField(blank=True, null=True)
+    status = models.SmallIntegerField(blank=True, null=True)
+    sort = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'et_finances'

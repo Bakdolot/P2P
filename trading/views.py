@@ -26,6 +26,14 @@ class TradeListView(generics.ListAPIView):
     serializer_class = RetrieveTradeSerializer
 
 
+class MyTradeListView(generics.ListAPIView):
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = TradeListFilter
+    queryset = Trade.objects.all()
+    serializer_class = RetrieveTradeSerializer
+    permission_classes = [IsOwner, IsParticipant]
+
+
 class TradeCreateView(generics.CreateAPIView):
     queryset = Trade
     serializer_class = CreateTradeSerializer
