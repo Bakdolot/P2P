@@ -17,7 +17,12 @@ def get_finished_status_value() -> int:
     return EtParameters.objects.get(categories='operationStatus', alias='completed').value
 
 
-def create_operation(type: str, login: str, method: str, currency: str, sum: str, ip_address: str, transfer_type: str=None, commission: str=None) -> int:
+def create_operation(
+    type: str, login: str, method: str, 
+    currency: str, sum: str, ip_address: str, 
+    sum_with_commission: str=None, 
+    transfer_type: str=None, commission: str=None
+    ) -> int:
     op_type = get_trade_type(type)
     operation = EtOperations.objects.create(
         operation_type = op_type.value,
@@ -30,15 +35,10 @@ def create_operation(type: str, login: str, method: str, currency: str, sum: str
         ip_address = ip_address,
         status = get_finished_status_value()
     )
-    if op_type.alias == 'exchange':
+    if transfer_type == 'debit':
+        operation.debit = sum_with_commission if sum_with_commission else sum
+    elif transfer_type == 'credit':
         operation.credit = sum
-    elif op_type.alias == 'block':
-        operation.debit = sum
-    elif op_type.alias == 'transfer':
-        if transfer_type == 'debit':
-            operation.debit = sum
-        elif transfer_type == 'credit':
-            operation.credit = sum
     operation.save()
     return operation.operation_id
 
@@ -62,7 +62,7 @@ def check_user_wallet(login: str, currency: str) -> bool:
 
 
 def get_sum_with_commission(sum: str, category: str) -> str:
-    commission = float(EtParameters.objects.get(categories=category, alias='commission').value) / 100
+    commission = float(get_commission(category)) / 100
     sum = str(float(sum)-(float(sum)*commission))
     return sum
 
@@ -89,7 +89,12 @@ def get_data(request) -> dict:
     ip = get_client_ip(request)
     if check_user_balance(user, data.get('currency'), data.get('sum')):
         balance_transfer(user, data.get('currency'), data.get('sum'), is_plus=False)
-        operation_id = create_operation('block', user, 'internal transfer', data.get('currency'), data.get('sum'), ip)
+        operation_id = create_operation(
+            'transfer', user, 'internal transfer', 
+            data.get('currency'), data.get('sum'), 
+            ip, transfer_type='credit', 
+            commission=get_commission('internal_transfer')
+            )
         data['owner_operation'] = operation_id
         data['owner'] = user
         data['status'] = True
@@ -118,7 +123,12 @@ def transfer_data(transfer) -> bool:
     if check_user_wallet(transfer.recipient, transfer.currency):
         ip = EtOperations.objects.get(operation_id=transfer.owner_operation).ip_address
         balance_transfer(transfer.recipient, transfer.currency, transfer.sum_with_commission, is_plus=True)
-        operation = create_operation('transfer', transfer.recipient, 'internal transfer', transfer.currency, transfer.sum, ip)
+        operation = create_operation(
+            'transfer', transfer.recipient, 
+            'internal transfer', transfer.currency, 
+            transfer.sum, ip, transfer_type='debit', 
+            commission=get_commission('internal_transfer')
+            )
         transfer.recipient_operation = operation
         transfer.status = True
         transfer.save()

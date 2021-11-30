@@ -24,5 +24,7 @@ class TradeAuthentication(authentication.BaseAuthentication):
             raise exceptions.AuthenticationFailed('Пользователь не найден')
         except EtAuthTokens.DoesNotExist:
             raise exceptions.AuthenticationFailed('Данный токен не найден')
+        except:
+            raise exceptions.AuthenticationFailed('Не правильный формат авторизации')
 
         return (user, None)

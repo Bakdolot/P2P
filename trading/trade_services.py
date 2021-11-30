@@ -10,7 +10,11 @@ def get_create_data(request) -> dict:
     ip = get_client_ip(request)
     if check_user_balance(login, currency, sum):
         balance_transfer(login, currency, sum, is_plus=False)
-        operation_id = create_operation('block', login, 'otc', currency, sum, ip)
+        operation_id = create_operation(
+            'block', login, 'otc', currency, 
+            sum, ip, transfer_type='credit', 
+            commission=get_commission('otc')
+            )
         data['owner'] = login
         data['data_status'] = True
         data['owner_operation'] = operation_id
@@ -43,15 +47,31 @@ def make_transaction(trade, request):
         balance_transfer(trade.participant, trade.sell_currency, trade.sell_quantity_with_commission, is_plus=True)
 
         ip_ownner = EtOperations.objects.get(operation_id=trade.owner_operation).ip_address
-        create_operation('exchange', trade.owner, 'otc', trade.buy_currency, trade.buy_quantity, ip_ownner)
-        operation = create_operation('exchange', trade.participant, 'otc', trade.sell_currency, trade.sell_quantity_with_commission, ip_recipient, commission=get_commission('otc'))
+        create_operation(
+            'exchange', trade.owner, 'otc', 
+            trade.buy_currency, trade.buy_quantity, 
+            ip_ownner, transfer_type='debit', 
+            commission=get_commission('otc')
+            )
+        
+        operation = create_operation(
+            'exchange', trade.participant, 'otc', 
+            trade.sell_currency, trade.sell_quantity, 
+            ip_recipient, trade.sell_quantity_with_commission, 
+            'debit', get_commission('otc')
+            )
     elif trade.type == 'cash' or trade.type == 'card':
         balance_transfer(trade.participant, trade.sell_currency, trade.sell_quantity_with_commission, is_plus=True)
-        operation = create_operation('exchange', trade.participant, 'otc', trade.sell_currency, trade.sell_quantity_with_commission, ip_recipient, commission=get_commission('otc'))
+        operation = create_operation(
+            'exchange', trade.participant, 'otc', 
+            trade.sell_currency, trade.sell_quantity,
+            ip_recipient, trade.sell_quantity_with_commission, 
+            'debit', get_commission('otc')
+            )
     trade.status = 'finished'
     trade.participant_operation = operation
     trade.save()
-
+    
 
 def send_notification(email: str):
     pass
