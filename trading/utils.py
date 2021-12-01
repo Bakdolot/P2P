@@ -22,7 +22,7 @@ def convert_sum(sum: str, step_size: str) -> str:
 
 
 def get_step_size(currency):
-    return EtFinances.objects.filter(alias=currency).first().step_size
+    return EtFinances.objects.filter(currency=currency).first().step_size
 
 
 def get_correct_sum(currency, sum):
