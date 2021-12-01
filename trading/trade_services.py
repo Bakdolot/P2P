@@ -1,4 +1,4 @@
-from internal_transfer.services import check_user_balance, balance_transfer, get_client_ip, get_commission, create_operation
+from internal_transfer.services import check_user_balance, balance_transfer, get_client_ip, get_commission, create_operation, get_finance
 from .models import EtOperations
 from .utils import get_correct_sum
 
@@ -13,8 +13,9 @@ def get_create_data(request) -> dict:
     data['buy_quantity'] = get_correct_sum(data['buy_currency'], data['buy_quantity'])
     if check_user_balance(login, currency, sum):
         balance_transfer(login, currency, sum, is_plus=False)
+        currecy_alias = get_finance(currency).alias
         operation_id = create_operation(
-            'block', login, 'otc', currency, 
+            'block', login, currecy_alias, currency, 
             sum, ip, transfer_type='credit', 
             commission=get_commission('otc')
             )
@@ -50,23 +51,25 @@ def make_transaction(trade, request):
         balance_transfer(trade.participant, trade.sell_currency, trade.sell_quantity_with_commission, is_plus=True)
 
         ip_ownner = EtOperations.objects.get(operation_id=trade.owner_operation).ip_address
+        currecy_alias = get_finance(trade.buy_currency).alias
         create_operation(
-            'exchange', trade.owner, 'otc', 
+            'exchange', trade.owner, currecy_alias, 
             trade.buy_currency, trade.buy_quantity, 
             ip_ownner, transfer_type='debit', 
             commission=get_commission('otc')
             )
-        
+        currecy_alias = get_finance(trade.sell_currency).alias
         operation = create_operation(
-            'exchange', trade.participant, 'otc', 
+            'exchange', trade.participant, currecy_alias, 
             trade.sell_currency, trade.sell_quantity, 
             ip_recipient, trade.sell_quantity_with_commission, 
             'debit', get_commission('otc')
             )
     elif trade.type == 'cash' or trade.type == 'card':
         balance_transfer(trade.participant, trade.sell_currency, trade.sell_quantity_with_commission, is_plus=True)
+        currecy_alias = get_finance(trade.sell_currency).alias
         operation = create_operation(
-            'exchange', trade.participant, 'otc', 
+            'exchange', trade.participant, currecy_alias, 
             trade.sell_currency, trade.sell_quantity,
             ip_recipient, trade.sell_quantity_with_commission, 
             'debit', get_commission('otc')

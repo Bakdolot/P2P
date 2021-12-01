@@ -1,7 +1,11 @@
 from django.db import transaction
 
-from trading.models import EtBalance, EtParameters, EtOperations
+from trading.models import EtBalance, EtParameters, EtOperations, EtFinances
 import uuid
+
+
+def get_finance(currency):
+    return EtFinances.objects.filter(currency=currency).first()
 
 
 def get_trade_type(type: str):
@@ -89,8 +93,9 @@ def get_data(request) -> dict:
     ip = get_client_ip(request)
     if check_user_balance(user, data.get('currency'), data.get('sum')):
         balance_transfer(user, data.get('currency'), data.get('sum'), is_plus=False)
+        currecy_alias = get_finance(data.get('currency')).alias
         operation_id = create_operation(
-            'transfer', user, 'internal transfer', 
+            'transfer', user, currecy_alias, 
             data.get('currency'), data.get('sum'), 
             ip, transfer_type='credit', 
             commission=get_commission('internal_transfer')
@@ -123,9 +128,10 @@ def transfer_data(transfer) -> bool:
     if check_user_wallet(transfer.recipient, transfer.currency):
         ip = EtOperations.objects.get(operation_id=transfer.owner_operation).ip_address
         balance_transfer(transfer.recipient, transfer.currency, transfer.sum_with_commission, is_plus=True)
+        currecy_alias = get_finance(transfer.currency).alias
         operation = create_operation(
             'transfer', transfer.recipient, 
-            'internal transfer', transfer.currency, 
+            currecy_alias, transfer.currency, 
             transfer.sum, ip, transfer_type='debit', 
             commission=get_commission('internal_transfer')
             )

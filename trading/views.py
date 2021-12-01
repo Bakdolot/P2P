@@ -26,13 +26,18 @@ class TradeListView(generics.ListAPIView):
     queryset = Trade.objects.filter(status='expectation')
     serializer_class = RetrieveTradeSerializer
 
+    def get_queryset(self):
+        return Trade.objects.filter(status='expectation').exclude(owner=self.request.user.login)
+
 
 class MyTradeListView(generics.ListAPIView):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = TradeListFilter
-    queryset = Trade.objects.all()
     serializer_class = RetrieveTradeSerializer
     permission_classes = [IsOwner, IsParticipant]
+
+    def get_queryset(self):
+        return Trade.objects.filter(owner=self.request.user.login).union(Trade.objects.filter(participant=self.request.user.login))
 
 
 class TradeCreateView(generics.CreateAPIView):

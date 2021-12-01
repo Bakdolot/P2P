@@ -1,6 +1,6 @@
 from django.db.models.signals import pre_save
-from .models import EtBalance, Trade, EtFinances
-from internal_transfer.services import get_sum_with_commission
+from .models import Trade
+from internal_transfer.services import get_sum_with_commission, get_finance
 from datetime import datetime
 
 
@@ -21,12 +21,8 @@ def convert_sum(sum: str, step_size: str) -> str:
     return correct_sum
 
 
-def get_step_size(currency):
-    return EtFinances.objects.filter(currency=currency).first().step_size
-
-
 def get_correct_sum(currency, sum):
-    step_size = get_step_size(currency)
+    step_size = get_finance(currency).step_size
     return convert_sum(sum, step_size)
 
 
