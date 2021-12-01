@@ -148,7 +148,6 @@ class EtFinances(models.Model):
     min_qty = models.CharField(max_length=32)
     max_qty = models.CharField(max_length=32)
     step_size = models.CharField(max_length=32)
-    commission = models.CharField(max_length=12, blank=True, null=True)
     addination_fees = models.CharField(max_length=12, blank=True, null=True)
     cashout_fees = models.CharField(max_length=12, blank=True, null=True)
     cashout_status = models.SmallIntegerField(blank=True, null=True)

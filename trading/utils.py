@@ -32,8 +32,7 @@ def get_correct_sum(currency, sum):
 
 def my_callback(sender, instance, *args, **kwargs):
     sum_commission = get_sum_with_commission(instance.sell_quantity, 'otc')
-    # instance.sell_quantity_with_commission = get_correct_sum(instance.sell_currency, sum_commission)
-    instance.sell_quantity_with_commission = sum_commission
+    instance.sell_quantity_with_commission = get_correct_sum(instance.sell_currency, sum_commission)
 
 pre_save.connect(my_callback, sender=Trade)
 
