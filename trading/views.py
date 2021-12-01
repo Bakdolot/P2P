@@ -64,7 +64,7 @@ class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         trade = generics.get_object_or_404(Trade, id=self.kwargs.get('pk'))
         try:
-            if self.request in SAFE_METHODS and \
+            if self.request.method in SAFE_METHODS and \
             self.request.user.login == trade.participant or \
             self.request.user.login == trade.owner:
                 return Trade.objects.all()
@@ -91,7 +91,7 @@ class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class AcceptCardReceivedPaymentTradeView(generics.GenericAPIView):
-    queryset = Trade.objects.filter(type='card', status='process', participant_sent=False)
+    queryset = Trade.objects.filter(type='card', status='process', participant_sent=True)
     permission_classes = [IsOwner]
     
     def put(self, request, *args, **kwargs):

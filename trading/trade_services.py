@@ -1,10 +1,15 @@
 from internal_transfer.services import check_user_balance, balance_transfer, get_client_ip, get_commission, create_operation
 from .models import EtOperations, EtFinances
-from .utils import get_correct_sum
+from .utils import convert_sum
 
 
 def get_step_size(currency):
     return EtFinances.objects.get(currency=currency).step_size
+
+
+def get_correct_sum(currency, sum):
+    step_size = get_step_size(currency)
+    return convert_sum(sum, step_size)
 
 
 def get_create_data(request) -> dict:
@@ -13,6 +18,8 @@ def get_create_data(request) -> dict:
     currency = data.get('sell_currency')
     sum = data.get('sell_quantity')
     ip = get_client_ip(request)
+    data['sell_quantity'] = get_correct_sum(currency, sum)
+    data['buy_quantity'] = get_correct_sum(data['buy_currency'], data['buy_quantity'])
     if check_user_balance(login, currency, sum):
         balance_transfer(login, currency, sum, is_plus=False)
         operation_id = create_operation(

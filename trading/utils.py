@@ -2,10 +2,12 @@ from django.db.models.signals import pre_save
 from .models import Trade
 from internal_transfer.services import get_sum_with_commission
 from datetime import datetime
+from .trade_services import get_correct_sum
 
 
 def my_callback(sender, instance, *args, **kwargs):
-    instance.sell_quantity_with_commission = get_sum_with_commission(instance.sell_quantity, 'otc')
+    sum_commission = get_sum_with_commission(instance.sell_quantity, 'otc')
+    instance.sell_quantity_with_commission = get_correct_sum(instance.sell_currency, sum_commission)
 
 pre_save.connect(my_callback, sender=Trade)
 
@@ -14,7 +16,9 @@ def convert_unixtime_to_datetime(unixtime: str) -> str:
     return datetime.utcfromtimestamp(float(unixtime)).strftime('%Y/%m/%d %H:%M')
 
 
-def get_correct_sum(sum: str, step_size: str) -> str:
+def convert_sum(sum: str, step_size: str) -> str:
+    if not '1' in step_size.split('.')[1]:
+        return sum.split('.')[0]
     step_len = len(step_size.split('.')[1].split('1')[0]) + 1
     temp = sum.split('.')
     if len(temp) == 1:
