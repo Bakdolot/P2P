@@ -22,22 +22,17 @@ def convert_sum(sum: str, step_size: str) -> str:
 
 
 def get_step_size(currency):
-    return EtFinances.objects.get(alias=currency).step_size
+    return EtFinances.objects.filter(alias=currency).first().step_size
 
 
-def get_currency_alias(currency, login):
-    return EtBalance.objects.get(login=login, currency=currency).alias
-
-
-def get_correct_sum(currency, sum, login):
-    currency = get_currency_alias(currency, login)
+def get_correct_sum(currency, sum):
     step_size = get_step_size(currency)
     return convert_sum(sum, step_size)
 
 
 def my_callback(sender, instance, *args, **kwargs):
     sum_commission = get_sum_with_commission(instance.sell_quantity, 'otc')
-    instance.sell_quantity_with_commission = get_correct_sum(instance.sell_currency, sum_commission, instance.owner)
+    instance.sell_quantity_with_commission = get_correct_sum(instance.sell_currency, sum_commission)
 
 pre_save.connect(my_callback, sender=Trade)
 
