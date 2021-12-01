@@ -1,8 +1,16 @@
 from django.db.models.signals import pre_save
-from .models import Trade
+from .models import Trade, EtFinances
 from internal_transfer.services import get_sum_with_commission
 from datetime import datetime
-from .trade_services import get_correct_sum
+
+
+def get_step_size(currency):
+    return EtFinances.objects.get(currency=currency).step_size
+
+
+def get_correct_sum(currency, sum):
+    step_size = get_step_size(currency)
+    return convert_sum(sum, step_size)
 
 
 def my_callback(sender, instance, *args, **kwargs):
