@@ -1,5 +1,5 @@
 from django.db.models.signals import pre_save
-from .models import Trade, EtFinances
+from .models import EtBalance, Trade, EtFinances
 from internal_transfer.services import get_sum_with_commission
 from datetime import datetime
 
@@ -22,17 +22,22 @@ def convert_sum(sum: str, step_size: str) -> str:
 
 
 def get_step_size(currency):
-    return EtFinances.objects.get(currency=currency).step_size
+    return EtFinances.objects.get(alias=currency).step_size
 
 
-def get_correct_sum(currency, sum):
+def get_currency_alias(currency, login):
+    return EtBalance.objects.get(login=login, currency=currency).alias
+
+
+def get_correct_sum(currency, sum, login):
+    currency = get_currency_alias(currency, login)
     step_size = get_step_size(currency)
     return convert_sum(sum, step_size)
 
 
 def my_callback(sender, instance, *args, **kwargs):
     sum_commission = get_sum_with_commission(instance.sell_quantity, 'otc')
-    instance.sell_quantity_with_commission = get_correct_sum(instance.sell_currency, sum_commission)
+    instance.sell_quantity_with_commission = get_correct_sum(instance.sell_currency, sum_commission, instance.owner)
 
 pre_save.connect(my_callback, sender=Trade)
 

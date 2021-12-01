@@ -9,8 +9,8 @@ def get_create_data(request) -> dict:
     currency = data.get('sell_currency')
     sum = data.get('sell_quantity')
     ip = get_client_ip(request)
-    data['sell_quantity'] = get_correct_sum(currency, sum)
-    data['buy_quantity'] = get_correct_sum(data['buy_currency'], data['buy_quantity'])
+    data['sell_quantity'] = get_correct_sum(currency, sum, login)
+    data['buy_quantity'] = get_correct_sum(data['buy_currency'], data['buy_quantity'], login)
     if check_user_balance(login, currency, sum):
         balance_transfer(login, currency, sum, is_plus=False)
         operation_id = create_operation(
