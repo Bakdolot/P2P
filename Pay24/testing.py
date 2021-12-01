@@ -1,5 +1,6 @@
 def get_correct_sum(sum: str, step_size: str) -> str:
     step_len = len(step_size.split('.')[1].split('1')[0]) + 1
+    print('1' in step_size.split('.')[1])
     temp = sum.split('.')
     if len(temp) == 1:
         sum = temp[0] + '0' * step_len
@@ -13,4 +14,4 @@ def get_correct_sum(sum: str, step_size: str) -> str:
     return correct_sum
 
 
-print(get_correct_sum('23.234', '0.0000010000'))
+print(get_correct_sum('23.234', '1.00'))

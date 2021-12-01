@@ -1,5 +1,5 @@
 from internal_transfer.services import check_user_balance, balance_transfer, get_client_ip, get_commission, create_operation
-from .models import EtOperations, EtFinances
+from .models import EtOperations
 from .utils import get_correct_sum
 
 
