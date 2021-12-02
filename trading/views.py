@@ -1,4 +1,5 @@
 from rest_framework import generics
+from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework import status
 from django_filters import rest_framework as filters
@@ -25,6 +26,19 @@ class TradeListView(generics.ListAPIView):
     queryset = Trade.objects.filter(status='expectation')
     serializer_class = RetrieveTradeSerializer
 
+    def get_queryset(self):
+        return Trade.objects.filter(status='expectation').exclude(owner=self.request.user.login)
+
+
+class MyTradeListView(generics.ListAPIView):
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = TradeListFilter
+    serializer_class = RetrieveTradeSerializer
+    permission_classes = [IsOwner, IsParticipant]
+
+    def get_queryset(self):
+        return Trade.objects.filter(owner=self.request.user.login).union(Trade.objects.filter(participant=self.request.user.login))
+
 
 class TradeCreateView(generics.CreateAPIView):
     queryset = Trade
@@ -39,7 +53,7 @@ class TradeCreateView(generics.CreateAPIView):
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-        return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
+        return Response({'message': 'Не хватает баланса'}, status=status.HTTP_402_PAYMENT_REQUIRED)
 
 
 class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
@@ -55,7 +69,9 @@ class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         trade = generics.get_object_or_404(Trade, id=self.kwargs.get('pk'))
         try:
-            if self.request.user.login == trade.owner: 
+            if self.request.method in SAFE_METHODS and \
+            self.request.user.login == trade.participant or \
+            self.request.user.login == trade.owner:
                 return Trade.objects.all()
         except AttributeError:
             None
@@ -70,17 +86,17 @@ class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
         trade = self.get_object()
         if trade_update(request, trade):
             return super().put(request, *args, **kwargs)
-        return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
+        return Response({'message': 'Не хватает баланса'}, status=status.HTTP_402_PAYMENT_REQUIRED)
     
     def patch(self, request, *args, **kwargs):
         trade = self.get_object()
         if trade_update(request, trade):
             return super().patch(request, *args, **kwargs)
-        return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
+        return Response({'message': 'Не хватает баланса'}, status=status.HTTP_402_PAYMENT_REQUIRED)
 
 
 class AcceptCardReceivedPaymentTradeView(generics.GenericAPIView):
-    queryset = Trade.objects.filter(type='card', status='process')
+    queryset = Trade.objects.filter(type='card', status='process', participant_sent=True)
     permission_classes = [IsOwner]
     
     def put(self, request, *args, **kwargs):
@@ -110,7 +126,7 @@ class TradeJoinView(generics.GenericAPIView):
                 trade.participant = login
                 make_transaction(trade, request)
                 return Response({'status': 'SUCCESS TRADE WAS COMPLETED'}, status=status.HTTP_202_ACCEPTED)
-        return Response({'reason': 'NOT ENOUGH BALANCE'}, status=status.HTTP_402_PAYMENT_REQUIRED)
+        return Response({'message': 'Не хватает баланса'}, status=status.HTTP_402_PAYMENT_REQUIRED)
 
 
 class AcceptTradeView(generics.GenericAPIView):  # Наличка

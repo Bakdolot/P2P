@@ -16,7 +16,11 @@ class GetTransferSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InternalTransfer
-        fields = '__all__'
+        exclude = [
+            'security_code',
+            'owner_operation',
+            'recipient_operation'
+        ]
 
 
 class UpdateTransferSerializer(serializers.ModelSerializer):

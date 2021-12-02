@@ -30,8 +30,8 @@ class Trade(models.Model):
     type = models.CharField('Тип сделки', max_length=10, choices=TYPE_CHOICES)
     description = models.TextField('Описание', blank=True, null=True)
     phone = models.CharField('Телефонный номер', max_length=50, blank=True, null=True)
-    longitude = models.CharField('Долгота', max_length=12, blank=True, null=True)
-    latitude = models.CharField('Широта', max_length=12, blank=True, null=True)
+    longitude = models.CharField('Долгота', max_length=32, blank=True, null=True)
+    latitude = models.CharField('Широта', max_length=32, blank=True, null=True)
     bank_card = models.CharField(max_length=16, blank=True, null=True)
     image = models.FileField(blank=True, null=True, upload_to=f'participant_images/')
     owner_confirm = models.BooleanField(default=False, blank=True, null=True)
@@ -132,3 +132,35 @@ class EtUsers(models.Model):
     class Meta:
         managed = False
         db_table = 'et_users'
+
+
+class EtFinances(models.Model):
+    finance_id = models.AutoField(primary_key=True)
+    finance_type = models.SmallIntegerField(blank=True, null=True)
+    direction = models.SmallIntegerField(blank=True, null=True)
+    name = models.CharField(max_length=280)
+    alias = models.CharField(max_length=280)
+    logo = models.CharField(max_length=16, blank=True, null=True)
+    currency = models.CharField(max_length=32)
+    date_creation = models.CharField(max_length=32)
+    date_update = models.CharField(max_length=32)
+    balance = models.CharField(max_length=32, blank=True, null=True)
+    min_qty = models.CharField(max_length=32)
+    max_qty = models.CharField(max_length=32)
+    step_size = models.CharField(max_length=32)
+    refill_status = models.SmallIntegerField(blank=True, null=True)
+    refill_fees = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    buy_status = models.SmallIntegerField(blank=True, null=True)
+    buy_fees = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    sell_status = models.SmallIntegerField(blank=True, null=True)
+    sell_fees = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    cashout_status = models.SmallIntegerField(blank=True, null=True)
+    cashout_fees = models.CharField(max_length=12, blank=True, null=True)
+    category = models.IntegerField(blank=True, null=True)
+    source = models.CharField(max_length=32, blank=True, null=True)
+    status = models.SmallIntegerField(blank=True, null=True)
+    sort = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'et_finances'

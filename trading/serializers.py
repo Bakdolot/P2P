@@ -41,6 +41,7 @@ class UpdateTradeSerializer(serializers.ModelSerializer):
             'longitude',
             'latitude',
             'bank_card',
+            'image'
         ]
 
 

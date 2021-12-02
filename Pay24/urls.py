@@ -8,5 +8,6 @@ urlpatterns = [
     path('create/', CreatePaymentView.as_view()),
     path('get/<str:guid>/', RetrievePaymentView.as_view()),
     path('get_categories/', GetCategoriesFromPay24.as_view()),
-    path('get_services/', GetServicesFromPay24.as_view())
+    path('get_services/', GetServicesFromPay24.as_view()),
+    path('get/list/', ListPaymentview.as_view()),
 ]

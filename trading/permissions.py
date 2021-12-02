@@ -8,7 +8,7 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
             return True
         try:
             login = request.user.login
-            return obj.owner == login
+            return obj.owner == login or obj.participant == login
         except AttributeError:
             return False
 

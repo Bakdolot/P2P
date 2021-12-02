@@ -1,5 +1,6 @@
-from internal_transfer.services import check_user_balance, balance_transfer, get_client_ip, get_commission, create_operation
+from internal_transfer.services import check_user_balance, balance_transfer, get_client_ip, get_commission, create_operation, get_finance
 from .models import EtOperations
+from .utils import get_correct_sum
 
 
 def get_create_data(request) -> dict:
@@ -8,9 +9,16 @@ def get_create_data(request) -> dict:
     currency = data.get('sell_currency')
     sum = data.get('sell_quantity')
     ip = get_client_ip(request)
+    data['sell_quantity'] = get_correct_sum(currency, sum)
+    data['buy_quantity'] = get_correct_sum(data['buy_currency'], data['buy_quantity'])
     if check_user_balance(login, currency, sum):
         balance_transfer(login, currency, sum, is_plus=False)
-        operation_id = create_operation('block', login, 'otc', currency, sum, ip)
+        currecy_alias = get_finance(currency).alias
+        operation_id = create_operation(
+            'block', login, currecy_alias, currency, 
+            sum, ip, transfer_type='credit', 
+            commission=get_commission('otc')
+            )
         data['owner'] = login
         data['data_status'] = True
         data['owner_operation'] = operation_id
@@ -43,11 +51,29 @@ def make_transaction(trade, request):
         balance_transfer(trade.participant, trade.sell_currency, trade.sell_quantity_with_commission, is_plus=True)
 
         ip_ownner = EtOperations.objects.get(operation_id=trade.owner_operation).ip_address
-        create_operation('exchange', trade.owner, 'otc', trade.buy_currency, trade.buy_quantity, ip_ownner)
-        operation = create_operation('exchange', trade.participant, 'otc', trade.sell_currency, trade.sell_quantity_with_commission, ip_recipient, commission=get_commission('otc'))
+        currecy_alias = get_finance(trade.buy_currency).alias
+        create_operation(
+            'exchange', trade.owner, currecy_alias, 
+            trade.buy_currency, trade.buy_quantity, 
+            ip_ownner, transfer_type='debit', 
+            commission=get_commission('otc')
+            )
+        currecy_alias = get_finance(trade.sell_currency).alias
+        operation = create_operation(
+            'exchange', trade.participant, currecy_alias, 
+            trade.sell_currency, trade.sell_quantity, 
+            ip_recipient, trade.sell_quantity_with_commission, 
+            'debit', get_commission('otc')
+            )
     elif trade.type == 'cash' or trade.type == 'card':
         balance_transfer(trade.participant, trade.sell_currency, trade.sell_quantity_with_commission, is_plus=True)
-        operation = create_operation('exchange', trade.participant, 'otc', trade.sell_currency, trade.sell_quantity_with_commission, ip_recipient, commission=get_commission('otc'))
+        currecy_alias = get_finance(trade.sell_currency).alias
+        operation = create_operation(
+            'exchange', trade.participant, currecy_alias, 
+            trade.sell_currency, trade.sell_quantity,
+            ip_recipient, trade.sell_quantity_with_commission, 
+            'debit', get_commission('otc')
+            )
     trade.status = 'finished'
     trade.participant_operation = operation
     trade.save()

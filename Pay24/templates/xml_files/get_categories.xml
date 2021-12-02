@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="windows-1251"?>
 <request>
-    <auth login="login" sign="password" signAlg="MD5"/>
+    <auth login={{login}} sign={{password}} signAlg={{pay24_algo}}/>
     <providers>
         <getUIGroups/>
     </providers>
