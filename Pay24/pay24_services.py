@@ -1,8 +1,7 @@
 from lxml import etree
-from requests.structures import CaseInsensitiveDict
 from .models import Category, Service
 
-import re, os, json
+import json
 import requests
 import xmltodict
 
@@ -32,42 +31,49 @@ class Pay24ApiRequest:
         return etree.tostring(xml, xml_declaration=True, encoding='windows-1251')
 
     @staticmethod
-    def _check_categories(xml):
-        try:
-            resp_providers = xml.find('providers')
-            resp_categories = resp_providers.find('getUIGroups')
+    def _delete_non_active_instance(queryset, lst: list):
+        for i in queryset:
+            if i.api_id not in lst:
+                i.delete()
 
-            for sub_child in resp_categories.getchildren():
-                if sub_child.getchildren():
+        return True
 
-                    try:
-                        category = Category.objects.get(api_id=sub_child.get('id'))
-                        category.name = sub_child.get('name')
-                        category.logo_url = sub_child.get('logo')
-                        category.save()
+    def _check_categories(self, xml):
+        resp_providers = xml.find('providers')
+        resp_categories = resp_providers.find('getUIGroups')
 
-                    except Category.DoesNotExist:
-                        category = Category.objects.create(
-                            name=sub_child.get('name'),
-                            api_id=sub_child.get('id'),
-                            logo_url=sub_child.get('logo'),
-                            order_id=sub_child.get('orderId')
-                        )
+        api_ids = []
+        for sub_child in resp_categories.getchildren():
+            if sub_child.getchildren():
+                api_ids.append(sub_child.get('id'))
+                try:
+                    category = Category.objects.get(api_id=sub_child.get('id'))
+                    category.name = sub_child.get('name')
+                    category.logo_url = sub_child.get('logo')
+                    category.save()
 
-            return True
-        except Exception as e:
-            return False
+                except Category.DoesNotExist:
+                    category = Category.objects.create(
+                        name=sub_child.get('name'),
+                        api_id=sub_child.get('id'),
+                        logo_url=sub_child.get('logo'),
+                        order_id=sub_child.get('orderId')
+                    )
 
-    @staticmethod
-    def _check_services(xml):
+        self._delete_non_active_instance(Category.objects.all(), api_ids)
+        return True
+
+    def _check_services(self, xml):
         resp_providers = xml.find('providers')
         resp_services = resp_providers.find('getUIProviders')
 
+        api_ids = []
         for child in resp_services:
             xml_bytes = etree.tostring(child, encoding='windows-1251')
             xml_to_json = xmltodict.parse(xml_bytes, encoding='windows-1251')
             data = json.dumps(xml_to_json, ensure_ascii=False)
 
+            api_ids.append(child.attrib['id'])
             try:
                 service = Service.objects.get(api_id=int(child.attrib['id']))
                 service.logo_url = child.attrib['logo']
@@ -77,7 +83,7 @@ class Pay24ApiRequest:
                 service.name = child.attrib['jName']
                 service.data = data
             except:
-                service = Service.objects.create(
+                Service.objects.create(
                     category=int(child.attrib['grpId']),
                     api_id=int(child.attrib['id']),
                     logo_url=child.attrib['logo'],
@@ -89,6 +95,8 @@ class Pay24ApiRequest:
                     commission='0',
                     data=data
                 )
+
+        self._delete_non_active_instance(Service.objects.all(), api_ids)
         return True
 
     def get_all_categories(self):
