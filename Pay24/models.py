@@ -4,8 +4,9 @@ from datetime import datetime
 
 class Category(models.Model):
     name = models.CharField(max_length=120)
-    api_id = models.IntegerField()
-    logo = models.ImageField(upload_to='Pay24/')
+    api_id = models.IntegerField(unique=True)
+    logo = models.ImageField(upload_to='Pay24/', null=True)
+    logo_url = models.URLField(null=True)
     order_id = models.SmallIntegerField()
 
     class Meta:
@@ -13,15 +14,18 @@ class Category(models.Model):
 
 
 class Service(models.Model):
-    name = models.CharField(max_length=120)
+    name = models.CharField(max_length=255)
     api_id = models.IntegerField()
-    logo = models.ImageField(upload_to='Pay24/')
-    order_id = models.SmallIntegerField()
-    category = models.SmallIntegerField()
+    logo = models.ImageField(upload_to='Pay24/', null=True)
+    logo_url = models.URLField(null=True)
+    order_id = models.IntegerField()
+    category = models.IntegerField()
     commission = models.CharField(max_length=12)
-    min_sum = models.CharField(max_length=12)
-    max_sum = models.CharField(max_length=12)
-    support_phone = models.CharField(max_length=24)
+    min_sum = models.CharField(max_length=12, default='10')
+    max_sum = models.CharField(max_length=12, default='10000')
+    support_phone = models.CharField(max_length=24, null=True)
+
+    data = models.JSONField()
 
     class Meta:
         db_table = 'et_pay24_services'
