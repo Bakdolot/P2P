@@ -6,6 +6,7 @@ from .models import InternalTransfer
 
 class CreateTransferSerializer(serializers.ModelSerializer):
     security_code = serializers.CharField(validators=[RegexValidator('\d{6,10}', message='Пароль должен быть менее 10 символов и больше 6 символов и содержать только цифры', code='invalid_code')])
+    recipient = serializers.EmailField()
 
     class Meta:
         model = InternalTransfer

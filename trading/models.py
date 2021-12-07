@@ -164,3 +164,17 @@ class EtFinances(models.Model):
     class Meta:
         managed = False
         db_table = 'et_finances'
+
+    
+class EtFinanceRates(models.Model):
+    rate_id = models.AutoField(primary_key=True)
+    currency_f = models.CharField(max_length=12, blank=True, null=True)
+    currency_t = models.CharField(max_length=12, blank=True, null=True)
+    rate_buy = models.CharField(max_length=32, blank=True, null=True)
+    rate_sell = models.CharField(max_length=32, blank=True, null=True)
+    rate_exchange = models.CharField(max_length=32, blank=True, null=True)
+    date_update = models.CharField(max_length=32, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'et_finance_rates'
