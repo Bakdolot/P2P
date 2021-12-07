@@ -26,7 +26,7 @@ class Service(models.Model):
     max_sum = models.CharField(max_length=12, default='10000')
     support_phone = models.CharField(max_length=24, null=True)
 
-    data = models.JSONField()
+    data = models.TextField()
 
     class Meta:
         db_table = 'et_pay24_services'
