@@ -8,3 +8,6 @@ mysqlclient
 Pillow
 gunicorn
 django-cors-headers
+lxml
+xmltodict
+celery
