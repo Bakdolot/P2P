@@ -24,7 +24,7 @@ def get_finished_status_value() -> int:
 def check_min_sum(sum: str, currency: str) -> bool:
     currency_to_usdt = EtFinanceRates.objects.get(currency_f=currency, currency_t='USDT').rate_buy
     min_usdt = EtParameters.objects.get(categories='replenishOptions', alias='minimum').value
-    return (sum * float(currency_to_usdt)) >= float(min_usdt)
+    return (float(sum) * float(currency_to_usdt)) >= float(min_usdt)
 
 
 def create_operation(
