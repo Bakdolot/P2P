@@ -20,7 +20,7 @@ from .serializers import (
 from .permissions import IsOwnerOrReadOnly, IsOwner, IsParticipant, IsNotOwner
 
 class Hello(generics.GenericAPIView):
-    def get(request):
+    def get(self, request):
         return Response({'message': 'Hello'}, status=status.HTTP_200_OK)
 
 
