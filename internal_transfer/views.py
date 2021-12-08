@@ -17,8 +17,6 @@ class CreateTransferView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         data = request.data
-        if not check_user_wallet(data.get('recipient'), data.get('currency')):
-            return Response({'message': 'У этого пользователя нет такого кошелька'}, status=status.HTTP_400_BAD_REQUEST)
         data = get_data(request)
         if data['status'] == 'accept':
             serializer = self.get_serializer(data=data)
