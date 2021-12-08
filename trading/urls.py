@@ -6,12 +6,14 @@ from .views import (
     AcceptCardSentPaymentTradeView,
     AcceptCardReceivedPaymentTradeView,
     TradeQuitView,
-    MyTradeListView
+    MyTradeListView,
+    hello
     )
 
 
 urlpatterns = [
-    path('', TradeListView.as_view()),
+    path('', hello),
+    path('trades/', TradeListView.as_view()),
     path('my_trades/', MyTradeListView.as_view()),
     path('create/', TradeCreateView.as_view()),
     path('join/<int:pk>/', TradeJoinView.as_view()),

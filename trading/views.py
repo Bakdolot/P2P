@@ -20,6 +20,10 @@ from .serializers import (
 from .permissions import IsOwnerOrReadOnly, IsOwner, IsParticipant, IsNotOwner
 
 
+def hello(request):
+    return Response({'message': 'Hello'})
+
+
 class TradeListView(generics.ListAPIView):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = TradeListFilter
