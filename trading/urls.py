@@ -7,12 +7,12 @@ from .views import (
     AcceptCardReceivedPaymentTradeView,
     TradeQuitView,
     MyTradeListView,
-    hello
+    Hello
     )
 
 
 urlpatterns = [
-    path('', hello),
+    path('', Hello.as_view()),
     path('trades/', TradeListView.as_view()),
     path('my_trades/', MyTradeListView.as_view()),
     path('create/', TradeCreateView.as_view()),

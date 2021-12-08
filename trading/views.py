@@ -19,9 +19,9 @@ from .serializers import (
 )
 from .permissions import IsOwnerOrReadOnly, IsOwner, IsParticipant, IsNotOwner
 
-
-def hello(request):
-    return Response({'message': 'Hello'})
+class Hello(generics.GenericAPIView):
+    def get(request):
+        return Response({'message': 'Hello'}, status=status.HTTP_200_OK)
 
 
 class TradeListView(generics.ListAPIView):
