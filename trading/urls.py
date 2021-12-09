@@ -12,8 +12,8 @@ from .views import (
 
 
 urlpatterns = [
-    path('', Hello.as_view()),
-    path('trades/', TradeListView.as_view()),
+    # path('', Hello.as_view()),
+    path('', TradeListView.as_view()),
     path('my_trades/', MyTradeListView.as_view()),
     path('create/', TradeCreateView.as_view()),
     path('join/<int:pk>/', TradeJoinView.as_view()),
