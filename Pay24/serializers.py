@@ -1,4 +1,7 @@
+from django.shortcuts import get_object_or_404
+
 from rest_framework import serializers
+
 from .models import *
 
 
@@ -25,6 +28,11 @@ class CreatePaymentSerializer(serializers.ModelSerializer):
             'service',
             'sum',
         ]
+
+    def validate(self, attrs):
+        get_object_or_404(Category, api_id=attrs['category_api_id'])
+        get_object_or_404(Service, api_id=attrs['service_api_id'])
+        return super().validate()
 
 
 class PaymentRetrieveSerializer(serializers.ModelSerializer):

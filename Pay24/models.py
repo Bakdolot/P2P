@@ -45,6 +45,7 @@ class Pay24Operation(models.Model):
     date_creation = models.CharField(max_length=32, default=int(datetime.now().timestamp()), blank=True, null=True)
     date_update = models.CharField(max_length=32, blank=True, null=True)
     reference = models.IntegerField()
+    status = models.CharField(max_length=30, default='process')
 
     def save(self, *args, **kwargs):
         self.date_update = int(datetime.now().timestamp())

@@ -6,6 +6,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .serializers import *
 from .models import *
 from .pay24_services import Pay24ApiRequest
+
 from trading.permissions import IsOwner
 
 
@@ -24,6 +25,13 @@ class ServiceListView(generics.ListAPIView):
 class CreatePaymentView(generics.CreateAPIView):
     queryset = Pay24Operation
     serializer_class = CreatePaymentSerializer
+
+    def post(self, request, *args, **kwargs):
+        api = Pay24ApiRequest('netex_api', '0265648a8056f0fd290f5ab619e8cd43b21fa68e79ab573b0fc5b881b4f5918t')
+        serializer = CreatePaymentSerializer(request.POST)
+        if serializer.is_valid():
+            payment = serializer.save()
+            api.add_payment(payment)
 
 
 class RetrievePaymentView(generics.RetrieveAPIView):
@@ -48,7 +56,8 @@ class GetServicesFromPay24(views.APIView):
             return Response(status=status.HTTP_202_ACCEPTED)
         return Response(status=status.HTTP_409_CONFLICT)
 
-class ListPaymentview(generics.ListAPIView):
+
+class ListPaymentView(generics.ListAPIView):
     serializer_class = PaymentRetrieveSerializer
     queryset = Pay24Operation.objects.all()
     permission_classes = [IsOwner]

@@ -1,5 +1,7 @@
 from lxml import etree
+
 from .models import Category, Service
+from internal_transfer.services import create_operation
 
 import json
 import requests
@@ -30,12 +32,26 @@ class Pay24ApiRequest:
 
         return etree.tostring(xml, xml_declaration=True, encoding='windows-1251')
 
-    @staticmethod
-    def _delete_non_active_instance(queryset, lst: list):
-        for i in queryset:
-            if i.api_id not in lst:
-                i.delete()
+    def _get_payment_xml(self, payment):
+        xml = etree.Element('request')
+        etree.SubElement(xml, 'auth', attrib={'login': self.login, 'sign': self.password, 'signAlg': 'MD5'})
+        providers = etree.SubElement(xml, 'providers')
+        add_payment_offline = etree.SubElement(providers, 'addOfflinePayment')
+        payment_id = etree.SubElement(add_payment_offline, 'payment', attrib={'id': payment.id})
+        body = etree.SubElement(payment_id, 'to', attrib={
+            'service': payment.service,
+            'account': payment.account,
+            'amount': payment.amount,
+            'currency': '417',
+        })
 
+        return xml
+
+    @staticmethod
+    def _delete_non_active_instance(queryset, lst: list):  # TODO: why it work that?
+        for i in queryset:
+            if i.api_id in lst:
+                i.delete()
         return True
 
     def _check_categories(self, xml):
@@ -72,7 +88,6 @@ class Pay24ApiRequest:
             xml_bytes = etree.tostring(child, encoding='windows-1251')
             xml_to_json = xmltodict.parse(xml_bytes, encoding='windows-1251')
             data = json.dumps(xml_to_json, ensure_ascii=False)
-
             api_ids.append(child.attrib['id'])
             try:
                 service = Service.objects.get(api_id=int(child.attrib['id']))
@@ -115,6 +130,9 @@ class Pay24ApiRequest:
         resp_content = etree.XML(response.content)
         return self._check_services(resp_content)
 
+    def add_payment(self, payment):
+        url = f'{self.base_url}addOfflinePayment/'
+        payment = self._get_payment_xml(payment)
+        response = requests.post(url, headers={'Content-Type': 'application/xml'}, data=payment)
 
-# test = Pay24ApiRequest('netex_api', '0265648a8056f0fd290f5ab619e8cd43b21fa68e79ab573b0fc5b881b4f5918t')
-# test.get_all_categories()
+        return response
