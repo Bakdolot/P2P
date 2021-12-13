@@ -31,7 +31,7 @@ def get_correct_sum(currency, sum):
 def my_callback(sender, instance, *args, **kwargs):
     sum_commission = get_sum_with_commission(instance.sell_quantity, 'otc')
     instance.sell_quantity_with_commission = get_correct_sum(instance.sell_currency, sum_commission)
-    operation = EtOperations.objects.get(id=instance.owner_operation)
+    operation = EtOperations.objects.get(operation_id=instance.owner_operation)
     operation.credit = instance.sell_quantity_with_commission
     operation.save()
 

@@ -9,7 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-6e3+q3%(3+7&c90-m!f9pl6^e3$)mkzth1kv4(92c39qdg17j*'
 
-DEBUG = False
+DEBUG = True 
 
 ALLOWED_HOSTS = ['78.141.222.125', 'localhost', '127.0.0.1', 'netex.kg', 'ns1.netex.kg']
 
