@@ -106,6 +106,6 @@ class CommissionInternalTransferView(generics.GenericAPIView):
 class QuantityInternalTransfersView(generics.GenericAPIView):
 
     def get(self, request):
-        quantity = InternalTransfer.objects.all()
+        quantity = InternalTransfer.objects.filter(owner=request.user.login, status=False)
 
         return Response({'quantity': len(quantity)}, status=status.HTTP_200_OK)
