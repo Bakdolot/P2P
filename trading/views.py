@@ -5,7 +5,7 @@ from rest_framework import status
 from django_filters import rest_framework as filters
 
 from .filters import TradeListFilter
-from .models import Trade
+from .models import Trade, EtParameters
 from .trade_services import (
     get_create_data, make_transaction, 
     send_notification, trade_update
@@ -172,3 +172,12 @@ class TradeQuitView(generics.GenericAPIView):
             return Response({'participant': 'quited'}, status=status.HTTP_202_ACCEPTED)
 
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class CommissionView(generics.GenericAPIView):
+
+    def get(self, request):
+
+        commission = EtParameters.objects.get(id=70)
+        return Response({'commission': commission.value}, status=status.HTTP_200_OK)
+

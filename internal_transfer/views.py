@@ -5,6 +5,7 @@ from rest_framework import status
 from django.http import Http404
 
 from trading.utils import convert_unixtime_to_datetime
+from trading.models import EtParameters
 from .models import InternalTransfer
 from .services import get_data, transfer_data, check_user_wallet, transfer_update, balance_transfer
 from .serializers import CreateTransferSerializer, GetTransferSerializer, UpdateTransferSerializer
@@ -93,3 +94,18 @@ class AcceptTransferView(generics.GenericAPIView):
             if transfer_data(transfer):
                 return Response({'msg': 'SUCCESS'}, status=status.HTTP_202_ACCEPTED)
         return Response({'message': 'Неверный код протекции'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CommissionInternalTransferView(generics.GenericAPIView):
+
+    def get(self, request):
+        commission = EtParameters.objects.get(id=69)
+        return Response({'commission': commission.value}, status=status.HTTP_200_OK)
+
+
+class QuantityInternalTransfersView(generics.GenericAPIView):
+
+    def get(self, request):
+        quantity = InternalTransfer.objects.all()
+
+        return Response({'quantity': len(quantity)}, status=status.HTTP_200_OK)

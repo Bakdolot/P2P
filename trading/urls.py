@@ -7,7 +7,7 @@ from .views import (
     AcceptCardReceivedPaymentTradeView,
     TradeQuitView,
     MyTradeListView,
-    Hello
+    CommissionView
     )
 
 
@@ -21,5 +21,6 @@ urlpatterns = [
     path('trade/accept/<int:pk>/', AcceptTradeView.as_view()),
     path('accept_payment/sent/<int:pk>/', AcceptCardSentPaymentTradeView.as_view()),
     path('accept_payment/get/<int:pk>/', AcceptCardReceivedPaymentTradeView.as_view()),
-    path('quit/<int:pk>/', TradeQuitView.as_view())
+    path('quit/<int:pk>/', TradeQuitView.as_view()),
+    path('commission/', CommissionView.as_view()),
 ]
