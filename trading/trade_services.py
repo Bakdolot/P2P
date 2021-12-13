@@ -1,4 +1,4 @@
-from internal_transfer.services import check_user_balance, balance_transfer, get_client_ip, get_commission, create_operation, get_finance
+from internal_transfer.services import check_user_balance, balance_transfer, get_client_ip, get_commission, create_operation, get_finance, check_min_sum
 from .models import EtOperations
 from .utils import get_correct_sum
 
@@ -11,6 +11,10 @@ def get_create_data(request) -> dict:
     ip = get_client_ip(request)
     data['sell_quantity'] = get_correct_sum(currency, sum)
     data['buy_quantity'] = get_correct_sum(data['buy_currency'], data['buy_quantity'])
+    if not check_min_sum(sum, currency) and \
+    not check_min_sum(data.get('buy_quantity'), data.get('buy_currency')):
+        data['data_status'] = 'min_sum'
+        return data
     if check_user_balance(login, currency, sum):
         balance_transfer(login, currency, sum, is_plus=False)
         currecy_alias = get_finance(currency).alias
@@ -20,10 +24,10 @@ def get_create_data(request) -> dict:
             commission=get_commission('otc')
             )
         data['owner'] = login
-        data['data_status'] = True
+        data['data_status'] = 'accept'
         data['owner_operation'] = operation_id
         return data
-    data['data_status'] = False
+    data['data_status'] = 'not_enought'
     return data
 
 

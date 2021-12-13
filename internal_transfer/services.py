@@ -1,6 +1,6 @@
 from django.db import transaction
 
-from trading.models import EtBalance, EtParameters, EtOperations, EtFinances
+from trading.models import EtBalance, EtParameters, EtOperations, EtFinances, EtFinanceRates
 import uuid
 
 
@@ -19,6 +19,14 @@ def get_trade_type(type: str):
 
 def get_finished_status_value() -> int:
     return EtParameters.objects.get(categories='operationStatus', alias='completed').value
+
+
+def check_min_sum(sum: str, currency: str) -> bool:
+    min_usdt = EtParameters.objects.get(categories='replenishOptions', alias='minimum').value
+    if currency == 'USDT':
+        return float(sum) >= float(min_usdt)
+    currency_to_usdt = EtFinanceRates.objects.get(currency_f=currency, currency_t='USDT').rate_buy
+    return (float(sum) * float(currency_to_usdt)) >= float(min_usdt)
 
 
 def create_operation(
@@ -92,6 +100,9 @@ def get_data(request) -> dict:
     user = request.user.login
     ip = get_client_ip(request)
     if check_user_balance(user, data.get('currency'), data.get('sum')):
+        if not check_min_sum(data.get('sum'), data.get('currency')):
+            data['status'] = 'min_sum'
+            return data
         balance_transfer(user, data.get('currency'), data.get('sum'), is_plus=False)
         currecy_alias = get_finance(data.get('currency')).alias
         operation_id = create_operation(
@@ -102,9 +113,9 @@ def get_data(request) -> dict:
             )
         data['owner_operation'] = operation_id
         data['owner'] = user
-        data['status'] = True
+        data['status'] = 'accept'
         return data
-    data['status'] = False
+    data['status'] = 'not_enougth'
     return data
 
 

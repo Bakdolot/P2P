@@ -17,16 +17,17 @@ class CreateTransferView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         data = request.data
-        if not check_user_wallet(data.get('recipient'), data.get('currency')):
-            return Response({'message': 'У этого пользователя нет такого кошелька'}, status=status.HTTP_400_BAD_REQUEST)
         data = get_data(request)
-        if data['status']:
+        if data['status'] == 'accept':
             serializer = self.get_serializer(data=data)
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-        return Response({'message': 'Не достаточно средств'}, status=status.HTTP_400_BAD_REQUEST)
+        elif data['status'] == 'not_enougth':
+            return Response({'message': 'Не достаточно средств'}, status=status.HTTP_400_BAD_REQUEST)
+        elif data['status'] == 'min_sum':
+            return Response({'message': 'Сумма меньше минимальной суммы'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GetTransferListView(generics.ListAPIView):

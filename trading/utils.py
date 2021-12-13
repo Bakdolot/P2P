@@ -1,5 +1,5 @@
 from django.db.models.signals import pre_save
-from .models import Trade
+from .models import Trade, EtOperations
 from internal_transfer.services import get_sum_with_commission, get_finance
 from datetime import datetime
 
@@ -31,6 +31,9 @@ def get_correct_sum(currency, sum):
 def my_callback(sender, instance, *args, **kwargs):
     sum_commission = get_sum_with_commission(instance.sell_quantity, 'otc')
     instance.sell_quantity_with_commission = get_correct_sum(instance.sell_currency, sum_commission)
+    operation = EtOperations.objects.get(operation_id=instance.owner_operation)
+    operation.credit = instance.sell_quantity_with_commission
+    operation.save()
 
 pre_save.connect(my_callback, sender=Trade)
 

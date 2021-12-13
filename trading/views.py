@@ -19,6 +19,10 @@ from .serializers import (
 )
 from .permissions import IsOwnerOrReadOnly, IsOwner, IsParticipant, IsNotOwner
 
+class Hello(generics.GenericAPIView):
+    def get(self, request):
+        return Response({'message': 'Hello'}, status=status.HTTP_200_OK)
+
 
 class TradeListView(generics.ListAPIView):
     filter_backends = (filters.DjangoFilterBackend,)
@@ -46,15 +50,16 @@ class TradeCreateView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         data = get_create_data(request)
-        if data['data_status']:
+        if data['data_status'] == 'accept':
             serializer = self.get_serializer(data=data)
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-        return Response({'message': 'Не хватает баланса'}, status=status.HTTP_402_PAYMENT_REQUIRED)
-
+        elif data['data_status'] == 'not_enought':
+            return Response({'message': 'Не хватает баланса'}, status=status.HTTP_402_PAYMENT_REQUIRED)
+        elif data['data_status'] == 'min_sum':
+            return Response({'message': 'Сумма меньше минимальной суммы'}, status=status.HTTP_402_PAYMENT_REQUIRED)
 
 class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Trade.objects.filter(status='expectation')
