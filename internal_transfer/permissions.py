@@ -13,6 +13,12 @@ class IsOwnerOrRecipient(permissions.BasePermission):
             return False
 
 
+class IsUntoHimself(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return request.data.get('owner') != request.data.get('recipient')
+
+
 class IsRecipient(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         login = request.user.login

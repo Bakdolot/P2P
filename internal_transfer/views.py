@@ -9,12 +9,13 @@ from trading.models import EtParameters
 from .models import InternalTransfer
 from .services import get_data, transfer_data, check_user_wallet, transfer_update, balance_transfer
 from .serializers import CreateTransferSerializer, GetTransferSerializer, UpdateTransferSerializer
-from .permissions import IsOwnerOrRecipient, IsRecipient
+from .permissions import IsOwnerOrRecipient, IsRecipient, IsUntoHimself
 
 
 class CreateTransferView(generics.CreateAPIView):
     serializer_class = CreateTransferSerializer
     queryset = InternalTransfer
+    permission_classes = [IsUntoHimself]
 
     def create(self, request, *args, **kwargs):
         data = request.data
@@ -37,7 +38,12 @@ class GetTransferListView(generics.ListAPIView):
     def get_queryset(self):
         try:
             login = self.request.user.login
-            queryset = InternalTransfer.objects.filter(owner=login).union(InternalTransfer.objects.filter(recipient=login))
+            if self.request.GET.get('my'):
+                queryset = InternalTransfer.objects.filter(owner=login)
+            elif self.request.GET.get('me'):
+                queryset = InternalTransfer.objects.filter(recipient=login)
+            else:
+                queryset = InternalTransfer.objects.filter(owner=login).union(InternalTransfer.objects.filter(recipient=login))
             for i in range(len(queryset)):
                 queryset[i].create_at = convert_unixtime_to_datetime(queryset[i].create_at)
             return queryset
