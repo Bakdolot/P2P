@@ -14,6 +14,7 @@ class IsOwnerOrRecipient(permissions.BasePermission):
 
 
 class IsUntoHimself(permissions.BasePermission):
+    message = 'Нельзя отправлять самому себе!'
 
     def has_permission(self, request, view):
         return request.user.login != request.data.get('recipient')

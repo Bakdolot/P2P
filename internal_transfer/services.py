@@ -24,10 +24,10 @@ def get_finished_status_value() -> int:
 def check_min_sum(sum: str, currency: str, type: str) -> bool:
     if type == 'otc':
         min_usdt = EtParameters.objects.get(categories='otc_options', alias='min_sum').value
-        max_usdt = EtParameters.objects.get(categories='otc_options', alias='max_min').value
+        max_usdt = EtParameters.objects.get(categories='otc_options', alias='max_sum').value
     elif type == 'internal':
         min_usdt = EtParameters.objects.get(categories='internal_transfer', alias='min_sum').value
-        max_usdt = EtParameters.objects.get(categories='internal_transfer', alias='max_min').value
+        max_usdt = EtParameters.objects.get(categories='internal_transfer', alias='max_sum').value
     if currency == 'USDT':
         return float(sum) >= float(min_usdt) and float(sum) <= float(max_usdt)
     currency_to_usdt = EtFinanceRates.objects.get(currency_f=currency, currency_t='USDT').rate_buy
