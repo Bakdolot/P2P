@@ -96,7 +96,7 @@ class AcceptTransferView(generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         transfer = self.get_object()
-        if transfer.security_code == request.data.get('security_code'):
+        if transfer.security_code == str(request.data.get('security_code')):
             if transfer_data(transfer):
                 return Response({'msg': 'SUCCESS'}, status=status.HTTP_202_ACCEPTED)
         return Response({'message': 'Неверный код протекции'}, status=status.HTTP_400_BAD_REQUEST)
