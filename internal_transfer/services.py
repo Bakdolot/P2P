@@ -21,12 +21,18 @@ def get_finished_status_value() -> int:
     return EtParameters.objects.get(categories='operationStatus', alias='completed').value
 
 
-def check_min_sum(sum: str, currency: str) -> bool:
-    min_usdt = EtParameters.objects.get(categories='replenishOptions', alias='minimum').value
+def check_min_sum(sum: str, currency: str, type: str) -> bool:
+    if type == 'otc':
+        min_usdt = EtParameters.objects.get(categories='otc_options', alias='min_sum').value
+        max_usdt = EtParameters.objects.get(categories='otc_options', alias='max_min').value
+    elif type == 'internal':
+        min_usdt = EtParameters.objects.get(categories='internal_transfer', alias='min_sum').value
+        max_usdt = EtParameters.objects.get(categories='internal_transfer', alias='max_min').value
     if currency == 'USDT':
-        return float(sum) >= float(min_usdt)
+        return float(sum) >= float(min_usdt) and float(sum) <= float(max_usdt)
     currency_to_usdt = EtFinanceRates.objects.get(currency_f=currency, currency_t='USDT').rate_buy
-    return (float(sum) * float(currency_to_usdt)) >= float(min_usdt)
+    currency = (float(sum) * float(currency_to_usdt))
+    return currency >= float(min_usdt) and currency <= float(max_usdt)
 
 
 def create_operation(
@@ -100,7 +106,7 @@ def get_data(request) -> dict:
     user = request.user.login
     ip = get_client_ip(request)
     if check_user_balance(user, data.get('currency'), data.get('sum')):
-        if not check_min_sum(data.get('sum'), data.get('currency')):
+        if not check_min_sum(data.get('sum'), data.get('currency'), 'internal'):
             data['status'] = 'min_sum'
             return data
         balance_transfer(user, data.get('currency'), data.get('sum'), is_plus=False)

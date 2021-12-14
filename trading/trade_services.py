@@ -11,8 +11,8 @@ def get_create_data(request) -> dict:
     ip = get_client_ip(request)
     data['sell_quantity'] = get_correct_sum(currency, sum)
     data['buy_quantity'] = get_correct_sum(data['buy_currency'], data['buy_quantity'])
-    if not check_min_sum(sum, currency) and \
-    not check_min_sum(data.get('buy_quantity'), data.get('buy_currency')):
+    if not check_min_sum(sum, currency, 'otc') and \
+    not check_min_sum(data.get('buy_quantity', 'otc'), data.get('buy_currency')):
         data['data_status'] = 'min_sum'
         return data
     if check_user_balance(login, currency, sum):
