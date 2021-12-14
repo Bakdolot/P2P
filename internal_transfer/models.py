@@ -2,6 +2,8 @@ from django.db import models
 from django.core.validators import RegexValidator
 from datetime import datetime
 from django.http import Http404
+
+from trading.utils import get_correct_sum
 from .services import check_user_wallet, get_sum_with_commission
 
 
@@ -30,7 +32,8 @@ class InternalTransfer(models.Model):
 
     def save(self, *args, **kwargs):
         if check_user_wallet(self.recipient, self.currency):
-            self.sum_with_commission = get_sum_with_commission(self.sum, 'internal_transfer')
+            correct_sum = get_correct_sum(self.currency, get_sum_with_commission(self.sum, 'internal_transfer'))
+            self.sum_with_commission = correct_sum
             super().save(*args, **kwargs)
         else:
             raise Http404
