@@ -16,7 +16,7 @@ class IsOwnerOrRecipient(permissions.BasePermission):
 class IsUntoHimself(permissions.BasePermission):
 
     def has_permission(self, request, view):
-        return request.data.get('owner') != request.data.get('recipient')
+        return request.user.login != request.data.get('recipient')
 
 
 class IsRecipient(permissions.BasePermission):
