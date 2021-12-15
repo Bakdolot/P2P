@@ -1,11 +1,17 @@
 from django.db import transaction
 
 from trading.models import EtBalance, EtParameters, EtOperations, EtFinances, EtFinanceRates
+from .utils import convert_sum
 import uuid
 
 
 def get_finance(currency):
     return EtFinances.objects.filter(currency=currency).first()
+
+
+def get_correct_sum(currency, sum):
+    step_size = get_finance(currency).step_size
+    return convert_sum(sum, step_size)
 
 
 def get_trade_type(type: str):
@@ -105,6 +111,7 @@ def get_data(request) -> dict:
     data = request.data.copy()
     user = request.user.login
     ip = get_client_ip(request)
+    data['sum'] = get_correct_sum(data.get('currency'), data.get('sum'))
     if check_user_balance(user, data.get('currency'), data.get('sum')):
         if not check_min_sum(data.get('sum'), data.get('currency'), 'internal'):
             data['status'] = 'min_sum'
@@ -132,6 +139,7 @@ def transfer_update(request, transfer) -> bool:
     if not (currency == transfer.currency and sum == transfer.sum):
         if not check_user_balance(user_login, currency, sum):
             return False
+        sum = get_correct_sum(currency, sum)
         balance_transfer(user_login, transfer.currency, transfer.sum, is_plus=True)
         balance_transfer(user_login, currency, sum, is_plus=False)
         operation = EtOperations.objects.get(operation_id=transfer.owner_operation)

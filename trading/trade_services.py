@@ -20,7 +20,7 @@ def get_create_data(request) -> dict:
         currecy_alias = get_finance(currency).alias
         operation_id = create_operation(
             'block', login, currecy_alias, currency, 
-            sum, ip, transfer_type='credit', 
+            data['sell_quantity'], ip, transfer_type='credit', 
             commission=get_commission('otc')
             )
         data['owner'] = login
