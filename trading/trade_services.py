@@ -51,7 +51,7 @@ def make_transaction(trade, request):
     ip_recipient = get_client_ip(request)
     if trade.type == 'cript':
         balance_transfer(trade.owner, trade.buy_currency, trade.buy_quantity, is_plus=True)
-        balance_transfer(trade.participant, trade.sell_currency, trade.sell_quantity, is_plus=False)
+        balance_transfer(trade.participant, trade.buy_currency, trade.buy_quantity, is_plus=False)
         balance_transfer(trade.participant, trade.sell_currency, trade.sell_quantity_with_commission, is_plus=True)
 
         ip_ownner = EtOperations.objects.get(operation_id=trade.owner_operation).ip_address
