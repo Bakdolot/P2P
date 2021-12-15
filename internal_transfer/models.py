@@ -19,7 +19,7 @@ class InternalTransfer(models.Model):
         blank=True, 
         null=True, 
         validators=[RegexValidator(
-            '\d{6,10}', 
+            '^[0-9]{6,10}$', 
             message='Пароль должен быть менее 10 символов и больше 6 символов и содержать только цифры', 
             code='invalid_code')]
             )
