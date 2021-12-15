@@ -60,6 +60,7 @@ def make_transaction(trade, request):
             'exchange', trade.owner, currecy_alias, 
             trade.buy_currency, trade.buy_quantity, 
             ip_ownner, transfer_type='debit', 
+            requisite=trade.participant,
             commission=get_commission('otc')
             )
         currecy_alias = get_finance(trade.sell_currency).alias
@@ -67,7 +68,8 @@ def make_transaction(trade, request):
             'exchange', trade.participant, currecy_alias, 
             trade.sell_currency, trade.sell_quantity, 
             ip_recipient, trade.sell_quantity_with_commission, 
-            'debit', get_commission('otc')
+            'debit', get_commission('otc'),
+            requisite=trade.owner,
             )
     elif trade.type == 'cash' or trade.type == 'card':
         balance_transfer(trade.participant, trade.sell_currency, trade.sell_quantity_with_commission, is_plus=True)
@@ -76,7 +78,8 @@ def make_transaction(trade, request):
             'exchange', trade.participant, currecy_alias, 
             trade.sell_currency, trade.sell_quantity,
             ip_recipient, trade.sell_quantity_with_commission, 
-            'debit', get_commission('otc')
+            'debit', get_commission('otc'),
+            requisite=trade.owner,
             )
     trade.status = 'finished'
     trade.participant_operation = operation

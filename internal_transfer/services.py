@@ -45,7 +45,7 @@ def create_operation(
     type: str, login: str, method: str, 
     currency: str, sum: str, ip_address: str, 
     sum_with_commission: str=None, 
-    transfer_type: str=None, commission: str=None
+    transfer_type: str=None, commission: str=None, requisite: str=None
     ) -> int:
     op_type = get_trade_type(type)
     operation = EtOperations.objects.create(
@@ -57,7 +57,8 @@ def create_operation(
         sum = sum,
         commission = commission,
         ip_address = ip_address,
-        status = get_finished_status_value()
+        status = get_finished_status_value(),
+        requisite = requisite
     )
     if transfer_type == 'debit':
         operation.debit = sum_with_commission if sum_with_commission else sum
@@ -122,6 +123,7 @@ def get_data(request) -> dict:
             'transfer', user, currecy_alias, 
             data.get('currency'), data.get('sum'), 
             ip, transfer_type='credit', 
+            requisite=data.get('recipient'),
             commission=get_commission('internal_transfer')
             )
         data['owner_operation'] = operation_id
@@ -158,6 +160,7 @@ def transfer_data(transfer) -> bool:
             'transfer', transfer.recipient, 
             currecy_alias, transfer.currency, 
             transfer.sum, ip, transfer_type='debit', 
+            requisite=transfer.recipient,
             commission=get_commission('internal_transfer')
             )
         transfer.recipient_operation = operation
