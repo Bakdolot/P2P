@@ -88,7 +88,7 @@ class EtOperations(models.Model):
     commission = models.CharField(max_length=32, blank=True, null=True)
     rate = models.CharField(max_length=12, blank=True, null=True)
     network = models.CharField(max_length=32, blank=True, null=True)
-    date_creation = models.CharField(max_length=32)
+    date_creation = models.CharField(max_length=64, default=int(datetime.now().timestamp()), blank=True, null=True)
     date_update = models.CharField(max_length=32, blank=True, null=True)
     ip_address = models.CharField(max_length=32)
     requisite = models.CharField(max_length=120, blank=True, null=True)
