@@ -61,6 +61,7 @@ class TradeCreateView(generics.CreateAPIView):
         elif data['data_status'] == 'min_sum':
             return Response({'message': 'Сумма меньше минимальной суммы'}, status=status.HTTP_402_PAYMENT_REQUIRED)
 
+
 class TradeUpdateView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Trade.objects.filter(status='expectation')
     serializer_class = UpdateTradeSerializer
@@ -127,7 +128,7 @@ class TradeJoinView(generics.GenericAPIView):
             trade.save()
             return Response({'status': 'SUCCESS JOIN'}, status=status.HTTP_202_ACCEPTED)
         elif trade.type == 'cript':
-            if check_user_balance(login, trade.sell_currency, trade.sell_quantity):
+            if check_user_balance(login, trade.buy_currency, trade.buy_quantity):
                 trade.participant = login
                 make_transaction(trade, request)
                 return Response({'status': 'SUCCESS TRADE WAS COMPLETED'}, status=status.HTTP_202_ACCEPTED)

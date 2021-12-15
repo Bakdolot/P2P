@@ -108,4 +108,4 @@ class QuantityInternalTransfersView(generics.GenericAPIView):
     def get(self, request):
         quantity = InternalTransfer.objects.filter(owner=request.user.login, status=False)
 
-        return Response({'quantity': len(quantity)}, status=status.HTTP_200_OK)
+        return Response({'quantity': quantity.count}, status=status.HTTP_200_OK)
