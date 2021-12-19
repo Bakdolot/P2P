@@ -7,7 +7,7 @@ from django.http import Http404
 from trading.utils import convert_unixtime_to_datetime
 from trading.models import EtParameters
 from .models import InternalTransfer
-from .services import get_data, transfer_data, check_user_wallet, transfer_update, balance_transfer
+from .services import transfer_data, balance_transfer
 from .serializers import CreateTransferSerializer, GetTransferSerializer, UpdateTransferSerializer
 from .permissions import IsOwnerOrRecipient, IsRecipient, IsUntoHimself
 
@@ -18,18 +18,11 @@ class CreateTransferView(generics.CreateAPIView):
     permission_classes = [IsUntoHimself]
 
     def create(self, request, *args, **kwargs):
-        data = request.data
-        data = get_data(request)
-        if data['status'] == 'accept':
-            serializer = self.get_serializer(data=data)
-            serializer.is_valid(raise_exception=True)
-            self.perform_create(serializer)
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-        elif data['status'] == 'not_enougth':
-            return Response({'message': 'Не достаточно средств'}, status=status.HTTP_400_BAD_REQUEST)
-        elif data['status'] == 'min_sum':
-            return Response({'message': 'Сумма меньше минимальной суммы'}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = self.get_serializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class GetTransferListView(generics.ListAPIView):
@@ -76,18 +69,6 @@ class GetTransferView(generics.RetrieveUpdateDestroyAPIView):
         transfer = self.get_object()
         balance_transfer(transfer.owner, transfer.currency, transfer.sum, is_plus=True)
         return super().delete(request, *args, **kwargs)
-    
-    def put(self, request, *args, **kwargs):
-        transfer = self.get_object()
-        if transfer_update(request.data, transfer):
-            return super().put(request, *args, **kwargs)
-        return Response({'message': 'Не достаточно средств'}, status=status.HTTP_402_PAYMENT_REQUIRED)
-    
-    def patch(self, request, *args, **kwargs):
-        transfer = self.get_object()
-        if transfer_update(request.data, transfer):
-            return super().patch(request, *args, **kwargs)
-        return Response({'message': 'Не достаточно средств'}, status=status.HTTP_402_PAYMENT_REQUIRED)
 
 
 class AcceptTransferView(generics.GenericAPIView):
@@ -98,8 +79,8 @@ class AcceptTransferView(generics.GenericAPIView):
         transfer = self.get_object()
         if transfer.security_code == str(request.data.get('security_code')):
             if transfer_data(transfer):
-                return Response({'msg': 'SUCCESS'}, status=status.HTTP_202_ACCEPTED)
-        return Response({'message': 'Неверный код протекции'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'detail': 'SUCCESS'}, status=status.HTTP_202_ACCEPTED)
+        return Response({'detail': 'Неверный код протекции'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CommissionInternalTransferView(generics.GenericAPIView):

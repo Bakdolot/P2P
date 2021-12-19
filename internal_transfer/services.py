@@ -108,49 +108,6 @@ def balance_transfer(user: str, currency: str, sum: str, is_plus: bool = True):
         user_balance.save()
 
 
-def get_data(request) -> dict:
-    data = request.data.copy()
-    user = request.user.login
-    ip = get_client_ip(request)
-    data['sum'] = get_correct_sum(data.get('currency'), data.get('sum'))
-    if check_user_balance(user, data.get('currency'), data.get('sum')):
-        if not check_min_sum(data.get('sum'), data.get('currency'), 'internal'):
-            data['status'] = 'min_sum'
-            return data
-        balance_transfer(user, data.get('currency'), data.get('sum'), is_plus=False)
-        currecy_alias = get_finance(data.get('currency')).alias
-        operation_id = create_operation(
-            'transfer', user, currecy_alias, 
-            data.get('currency'), data.get('sum'), 
-            ip, transfer_type='credit', 
-            requisite=data.get('recipient'),
-            commission=get_commission('internal_transfer')
-            )
-        data['owner_operation'] = operation_id
-        data['owner'] = user
-        data['status'] = 'accept'
-        return data
-    data['status'] = 'not_enougth'
-    return data
-
-
-def transfer_update(request, transfer) -> bool:
-    user_login = transfer.owner
-    currency = request.get('currency')
-    sum = request.get('sum')
-    if not (currency == transfer.currency and sum == transfer.sum):
-        if not check_user_balance(user_login, currency, sum):
-            return False
-        sum = get_correct_sum(currency, sum)
-        balance_transfer(user_login, transfer.currency, transfer.sum, is_plus=True)
-        balance_transfer(user_login, currency, sum, is_plus=False)
-        operation = EtOperations.objects.get(operation_id=transfer.owner_operation)
-        operation.currency = currency
-        operation.sum = sum
-        operation.save()
-    return True
-
-
 def transfer_data(transfer) -> bool:
     if check_user_wallet(transfer.recipient, transfer.currency):
         ip = EtOperations.objects.get(operation_id=transfer.owner_operation).ip_address

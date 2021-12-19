@@ -4,7 +4,7 @@ from datetime import datetime
 from django.http import Http404
 
 from trading.utils import get_correct_sum
-from .services import check_user_wallet, get_sum_with_commission
+from .services import get_sum_with_commission
 
 
 class InternalTransfer(models.Model):
@@ -31,9 +31,6 @@ class InternalTransfer(models.Model):
         db_table = 'et_internal_transfer'
 
     def save(self, *args, **kwargs):
-        if check_user_wallet(self.recipient, self.currency):
-            correct_sum = get_correct_sum(self.currency, get_sum_with_commission(self.sum, 'internal_transfer'))
-            self.sum_with_commission = correct_sum
-            super().save(*args, **kwargs)
-        else:
-            raise Http404
+        correct_sum = get_correct_sum(self.currency, get_sum_with_commission(self.sum, 'internal_transfer'))
+        self.sum_with_commission = correct_sum
+        super().save(*args, **kwargs)
